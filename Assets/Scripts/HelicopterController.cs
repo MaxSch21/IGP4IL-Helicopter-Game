@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 
 /// <summary>
@@ -42,6 +44,7 @@ public class HelicopterController : MonoBehaviour
     private float currentVerticalSpeed = 0f;   // accumulates with arrow presses
     private float currentHorizontalInput = 0f; // -1 to 1 from A/D
     private float targetTiltAngle = 0f;
+    private bool inputEnabled = true;
 
     // ── Arduino serial (optional - stub for future use) ──────────────
     // When you integrate Arduino, read joystick X -> currentHorizontalInput (-1..1)
@@ -56,8 +59,12 @@ public class HelicopterController : MonoBehaviour
 
     void Update()
     {
-        HandleHorizontalInput();
-        HandleVerticalInput();
+        if (inputEnabled)
+        {
+            HandleHorizontalInput();
+            HandleVerticalInput();
+        }
+
         UpdateVisualTilt();
     }
 
@@ -160,6 +167,18 @@ public class HelicopterController : MonoBehaviour
     {
         currentVerticalSpeed = Mathf.Clamp(mappedPotValue, -maxVerticalSpeed, maxVerticalSpeed);
     }
+
+    public void SetInputEnabled(bool enabled)
+    {
+        inputEnabled = enabled;
+        if (!enabled)
+        {
+            currentHorizontalInput = 0f;
+            currentVerticalSpeed = 0f;
+        }
+    }
+
+    public float CurrentVerticalSpeed => currentVerticalSpeed;
 
     // ── Debug Gizmos ─────────────────────────────────────────────────
 
