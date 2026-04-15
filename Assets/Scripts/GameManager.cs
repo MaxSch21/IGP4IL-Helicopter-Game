@@ -146,6 +146,8 @@ public class GameManager : MonoBehaviour
             return;
 
         Debug.Log("GameManager: Package picked up");
+        if (StateMachine.Instance?.character?.carriedPackage != null)
+            StateMachine.Instance.character.carriedPackage.SetActive(true);
         StateMachine.Instance?.ChangeState(StateMachine.Instance.GetPackageState());
     }
 
@@ -165,6 +167,8 @@ public class GameManager : MonoBehaviour
         }
         else
         {
+            if (StateMachine.Instance?.character?.carriedPackage != null)
+                StateMachine.Instance.character.carriedPackage.SetActive(false);
             StateMachine.Instance?.ChangeState(StateMachine.Instance.GetDeliveredState());
         }
     }
@@ -181,6 +185,8 @@ public class GameManager : MonoBehaviour
 
         isGameOver = true;
         Debug.Log($"GameManager: Game over ({reason})");
+        if (StateMachine.Instance?.character?.carriedPackage != null)
+            StateMachine.Instance.character.carriedPackage.SetActive(false);
         StateMachine.Instance?.ChangeState(StateMachine.Instance.GetGameOverState());
         GameOver?.Invoke();
     }
@@ -192,6 +198,8 @@ public class GameManager : MonoBehaviour
 
         isWin = true;
         Debug.Log("GameManager: Win condition reached");
+        if (StateMachine.Instance?.character?.carriedPackage != null)
+            StateMachine.Instance.character.carriedPackage.SetActive(false);
         StateMachine.Instance?.ChangeState(StateMachine.Instance.GetWinState());
         Win?.Invoke();
     }

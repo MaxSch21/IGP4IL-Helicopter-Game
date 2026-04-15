@@ -39,6 +39,9 @@ public class HelicopterController : MonoBehaviour
     [Tooltip("Gravity scale applied to the Rigidbody2D")]
     public float gravityScale = 1f;
 
+    [Header("Package")]
+    public GameObject carriedPackage;
+
     // ── Private state ────────────────────────────────────────────────
     private Rigidbody2D rb;
     private float currentVerticalSpeed = 0f;   // accumulates with arrow presses
@@ -55,6 +58,8 @@ public class HelicopterController : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = gravityScale;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation; // we handle rotation visually
+        if (carriedPackage != null)
+            carriedPackage.SetActive(false);
     }
 
     void Update()

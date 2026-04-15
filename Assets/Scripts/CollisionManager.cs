@@ -36,6 +36,10 @@ public class CollisionManager : MonoBehaviour
                 {
                     hasPackage = true;
                     Debug.Log("Package picked up");
+                    if (obj != null)
+                    {
+                        Destroy(obj);
+                    }
                     PackagePickedUp?.Invoke();
                 }
                 else
