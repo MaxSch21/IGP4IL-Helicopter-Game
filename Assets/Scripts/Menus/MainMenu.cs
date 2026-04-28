@@ -1,0 +1,235 @@
+using System.Collections.Generic;
+using TMPro;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+
+public class MainMenu : MonoBehaviour
+{
+    [Header("Panels")]
+    [SerializeField] private GameObject mainPanel;
+    [SerializeField] private GameObject levelSelectPanel;
+
+    [Header("Buttons")]
+    [SerializeField] private Button playButton;
+    [SerializeField] private Button levelSelectButton;
+    [SerializeField] private Button levelSelectBackButton;
+    [SerializeField] private List<Button> levelButtons = new List<Button>();
+
+    [Header("Levels")]
+    [SerializeField] private List<LevelData> levels = new List<LevelData>();
+
+    void Awake()
+    {
+        BindStaticButtons();
+        BindLevelButtons();
+    }
+
+    void Start()
+    {
+        ShowMainMenu();
+        RefreshLevelButtons();
+    }
+
+    void OnEnable()
+    {
+        RefreshLevelButtons();
+    }
+
+    public void OnPlayClicked()
+    {
+        LoadFirstPlayableLevel();
+    }
+
+    public void OnLevelSelectionClicked()
+    {
+        ShowLevelSelect();
+    }
+
+    public void OnBackClicked()
+    {
+        ShowMainMenu();
+    }
+
+    public void OnQuitClicked()
+    {
+        Application.Quit();
+    }
+
+    public void OnLevelClicked(int levelIndex)
+    {
+        LevelData level = levels.Find(candidate => candidate != null && candidate.levelIndex == levelIndex);
+        LoadLevel(level);
+    }
+
+    public void OnLevelClicked(LevelData level)
+    {
+        LoadLevel(level);
+    }
+
+    public void ResetProgress()
+    {
+        LevelProgress.ResetAll(GetHighestConfiguredLevelIndex());
+        RefreshLevelButtons();
+    }
+
+    private void BindStaticButtons()
+    {
+        if (playButton != null)
+        {
+            playButton.onClick.RemoveAllListeners();
+            playButton.onClick.AddListener(OnPlayClicked);
+        }
+
+        if (levelSelectButton != null)
+        {
+            levelSelectButton.onClick.RemoveAllListeners();
+            levelSelectButton.onClick.AddListener(OnLevelSelectionClicked);
+        }
+
+        if (levelSelectBackButton != null)
+        {
+            levelSelectBackButton.onClick.RemoveAllListeners();
+            levelSelectBackButton.onClick.AddListener(OnBackClicked);
+        }
+    }
+
+    private void BindLevelButtons()
+    {
+        int count = Mathf.Min(levelButtons.Count, levels.Count);
+        for (int i = 0; i < count; i++)
+        {
+            Button button = levelButtons[i];
+            LevelData level = levels[i];
+
+            if (button == null || level == null)
+                continue;
+
+            button.onClick.RemoveAllListeners();
+            button.onClick.AddListener(() => LoadLevel(level));
+            SetButtonLabel(button, level);
+        }
+    }
+
+    private void RefreshLevelButtons()
+    {
+        if (playButton != null)
+            playButton.interactable = HasPlayableLevel();
+
+        if (levelSelectButton != null)
+            levelSelectButton.interactable = HasPlayableLevel();
+
+        for (int i = 0; i < levelButtons.Count; i++)
+        {
+            Button button = levelButtons[i];
+            if (button == null)
+                continue;
+
+            bool hasLevel = i < levels.Count && levels[i] != null && levels[i].IsConfigured;
+            bool unlocked = hasLevel && LevelProgress.IsUnlocked(levels[i].levelIndex);
+
+            button.interactable = unlocked;
+
+            if (hasLevel)
+                SetButtonLabel(button, levels[i]);
+        }
+    }
+
+    private void ShowMainMenu()
+    {
+        SetPanelActive(mainPanel, true);
+        SetPanelActive(levelSelectPanel, false);
+    }
+
+    private void ShowLevelSelect()
+    {
+        RefreshLevelButtons();
+        SetPanelActive(mainPanel, false);
+        SetPanelActive(levelSelectPanel, true);
+    }
+
+    private void LoadFirstPlayableLevel()
+    {
+        LevelData fallbackLevel = null;
+
+        foreach (LevelData level in levels)
+        {
+            if (level == null || !level.IsConfigured || !LevelProgress.IsUnlocked(level.levelIndex))
+                continue;
+
+            fallbackLevel = level;
+
+            if (!LevelProgress.IsCompleted(level.levelIndex))
+            {
+                LoadLevel(level);
+                return;
+            }
+        }
+
+        if (fallbackLevel != null)
+        {
+            LoadLevel(fallbackLevel);
+            return;
+        }
+
+        Debug.LogWarning("MainMenu: No playable level configured.");
+    }
+
+    private void LoadLevel(LevelData level)
+    {
+        if (level == null || !level.IsConfigured)
+        {
+            Debug.LogWarning("MainMenu: Level is not configured.");
+            return;
+        }
+
+        if (!LevelProgress.IsUnlocked(level.levelIndex))
+        {
+            Debug.LogWarning($"MainMenu: Level {level.levelIndex} is locked.");
+            return;
+        }
+
+        Time.timeScale = 1f;
+        Debug.Log($"MainMenu: Loading {level.displayName} ({level.sceneName})");
+        SceneManager.LoadScene(level.sceneName);
+    }
+
+    private bool HasPlayableLevel()
+    {
+        foreach (LevelData level in levels)
+        {
+            if (level != null && level.IsConfigured && LevelProgress.IsUnlocked(level.levelIndex))
+                return true;
+        }
+
+        return false;
+    }
+
+    private int GetHighestConfiguredLevelIndex()
+    {
+        int highest = 1;
+        foreach (LevelData level in levels)
+        {
+            if (level != null)
+                highest = Mathf.Max(highest, level.levelIndex);
+        }
+
+        return highest;
+    }
+
+    private void SetButtonLabel(Button button, LevelData level)
+    {
+        TMP_Text label = button.GetComponentInChildren<TMP_Text>();
+        if (label == null)
+            return;
+
+        string suffix = LevelProgress.IsCompleted(level.levelIndex) ? " - Done" : "";
+        label.text = $"{level.displayName}{suffix}";
+    }
+
+    private void SetPanelActive(GameObject panel, bool active)
+    {
+        if (panel != null)
+            panel.SetActive(active);
+    }
+}

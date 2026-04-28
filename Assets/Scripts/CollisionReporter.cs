@@ -21,9 +21,20 @@ public class CollisionReporter : MonoBehaviour
         if (tag != "Package" && tag != "DropZone" && tag != "Obstacle")
             return;
 
-        var manager = CollisionManager.Instance;
+        var manager = GameManager.Instance;
         if (manager == null) return;
 
-        manager.ReportCollision(tag, other);
+        switch (tag)
+        {
+            case "Package":
+                manager.TryPickupPackage(other);
+                break;
+            case "DropZone":
+                manager.TryDeliverPackage();
+                break;
+            case "Obstacle":
+                manager.TriggerGameOver();
+                break;
+        }
     }
 }

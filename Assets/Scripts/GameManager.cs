@@ -1,38 +1,57 @@
 using System;
-using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public enum GameState
+    {
+        Start,
+        NoPackage,
+        Package,
+        Delivered,
+        GameOver,
+        Win
+    }
+
     public static GameManager Instance { get; private set; }
 
+    [Header("Player References")]
+    [SerializeField] private HelicopterController helicopterController;
+    [SerializeField] private GameObject carriedPackage;
+
+    [Header("Level")]
+    [SerializeField] private int levelIndex = 1;
+    [SerializeField] private int requiredPackages = 3;
+    [SerializeField] private float startDelay = 0.5f;
+    [SerializeField] private float deliveryCooldown = 1f;
+
+    [Header("Fuel")]
     [SerializeField] private float maxFuel = 100f;
     [SerializeField] private float fuelConsumptionRate = 5f;
 
-    private readonly Dictionary<int, int> levelDeliveryGoals = new Dictionary<int, int> { { 0, 3 } };
-    private int currentLevel = 0;
-    private int currentDeliveries;
+    [SerializeField] private GameState currentState = GameState.Start;
+
+    private bool hasPackage;
+    private bool gameStarted;
+    private int deliveredPackages;
     private float currentFuel;
-    private bool isGameOver;
-    private bool isWin;
-    private bool subscribedToCollisionManager;
+    private Coroutine stateRoutine;
 
-    public event Action<int, int> PackageDelivered;
-    public event Action GameOver;
-    public event Action Win;
-    public event Action<int> GameStart;
-    public event Action<float, float> FuelChanged;
+    public event Action<int> OnGameStart;
+    public event Action<int, int> OnPackageDelivered;
+    public event Action<float, float> OnFuelChanged;
+    public event Action OnGameOver;
+    public event Action OnWin;
+    public event Action<GameState> OnStateChanged;
 
-    public void NotifyUIState()
-    {
-        int target = GetDeliveryTarget(currentLevel);
-        GameStart?.Invoke(target);
-        if (currentDeliveries > 0)
-        {
-            PackageDelivered?.Invoke(currentDeliveries, target);
-        }
-        FuelChanged?.Invoke(currentFuel, maxFuel);
-    }
+    public GameState CurrentState => currentState;
+    public bool HasPackage => hasPackage;
+    public int DeliveredPackages => deliveredPackages;
+    public int RequiredPackages => requiredPackages;
+    public float CurrentFuel => currentFuel;
+    public float MaxFuel => maxFuel;
 
     void Awake()
     {
@@ -43,164 +62,227 @@ public class GameManager : MonoBehaviour
         }
 
         Instance = this;
-    }
-
-    void OnEnable()
-    {
-        SubscribeToCollisionManager();
+        ResolveReferences();
     }
 
     void Start()
     {
-        InitializeLevel(currentLevel);
-        SubscribeToCollisionManager();
-    }
-
-    void OnDisable()
-    {
-        UnsubscribeFromCollisionManager();
+        StartGame();
     }
 
     void OnDestroy()
     {
         if (Instance == this)
             Instance = null;
-
-        UnsubscribeFromCollisionManager();
     }
 
     void Update()
     {
-        if (isGameOver || isWin)
+        if (!ShouldDrainFuel())
             return;
 
         float consumption = fuelConsumptionRate;
-        var controller = StateMachine.Instance?.character;
-        if (controller != null)
+        if (helicopterController != null)
         {
-            float verticalSpeed = Mathf.Abs(controller.CurrentVerticalSpeed);
-            float maxVertical = Mathf.Max(1f, controller.maxVerticalSpeed);
-            float verticalFactor = verticalSpeed / maxVertical;
-            consumption *= 1f + verticalFactor;
+            float verticalSpeed = Mathf.Abs(helicopterController.CurrentVerticalSpeed);
+            float maxVertical = Mathf.Max(1f, helicopterController.maxVerticalSpeed);
+            consumption *= 1f + verticalSpeed / maxVertical;
         }
 
-        currentFuel -= consumption * Time.deltaTime;
+        currentFuel = Mathf.Max(0f, currentFuel - consumption * Time.deltaTime);
+        OnFuelChanged?.Invoke(currentFuel, maxFuel);
+
         if (currentFuel <= 0f)
-        {
-            currentFuel = 0f;
-            HandleGameOver("Fuel depleted");
-        }
-        FuelChanged?.Invoke(currentFuel, maxFuel);
+            EnterGameOver("Fuel depleted");
     }
 
-    private void SubscribeToCollisionManager()
+    public void NotifyUIState()
     {
-        if (subscribedToCollisionManager)
+        if (!gameStarted)
             return;
 
-        if (CollisionManager.Instance == null)
-            return;
+        OnGameStart?.Invoke(requiredPackages);
+        OnPackageDelivered?.Invoke(deliveredPackages, requiredPackages);
+        OnFuelChanged?.Invoke(currentFuel, maxFuel);
 
-        CollisionManager.Instance.PackagePickedUp += HandlePackagePickedUp;
-        CollisionManager.Instance.PackageDelivered += HandlePackageDelivered;
-        CollisionManager.Instance.ObstacleHit += HandleObstacleHit;
-        subscribedToCollisionManager = true;
+        if (currentState == GameState.GameOver)
+            OnGameOver?.Invoke();
+        else if (currentState == GameState.Win)
+            OnWin?.Invoke();
     }
 
-    private void UnsubscribeFromCollisionManager()
+    public void TryPickupPackage(GameObject packageObject)
     {
-        if (!subscribedToCollisionManager)
+        if (currentState != GameState.NoPackage || hasPackage)
             return;
 
-        if (CollisionManager.Instance == null)
-            return;
+        hasPackage = true;
+        SetCarriedPackageVisible(true);
 
-        CollisionManager.Instance.PackagePickedUp -= HandlePackagePickedUp;
-        CollisionManager.Instance.PackageDelivered -= HandlePackageDelivered;
-        CollisionManager.Instance.ObstacleHit -= HandleObstacleHit;
-        subscribedToCollisionManager = false;
-    }
-
-    private void InitializeLevel(int level)
-    {
-        currentDeliveries = 0;
-        currentFuel = maxFuel;
-        isGameOver = false;
-        isWin = false;
-        int target = GetDeliveryTarget(level);
-        Debug.Log($"Initializing level {level} with goal {target}");
-        GameStart?.Invoke(target);
-        FuelChanged?.Invoke(currentFuel, maxFuel);
-    }
-
-    private int GetDeliveryTarget(int level)
-    {
-        if (levelDeliveryGoals.TryGetValue(level, out int goal))
-            return goal;
-        return 3;
-    }
-
-    private void HandlePackagePickedUp()
-    {
-        if (isGameOver || isWin)
-            return;
+        if (packageObject != null)
+            Destroy(packageObject);
 
         Debug.Log("GameManager: Package picked up");
-        if (StateMachine.Instance?.character?.carriedPackage != null)
-            StateMachine.Instance.character.carriedPackage.SetActive(true);
-        StateMachine.Instance?.ChangeState(StateMachine.Instance.GetPackageState());
+        SetState(GameState.Package);
     }
 
-    private void HandlePackageDelivered()
+    public void TryDeliverPackage()
     {
-        if (isGameOver || isWin)
+        if (currentState != GameState.Package || !hasPackage)
             return;
 
-        currentDeliveries++;
-        int target = GetDeliveryTarget(currentLevel);
-        Debug.Log($"GameManager: Package delivered ({currentDeliveries}/{target})");
-        PackageDelivered?.Invoke(currentDeliveries, target);
+        hasPackage = false;
+        deliveredPackages++;
+        SetCarriedPackageVisible(false);
 
-        if (currentDeliveries >= target)
+        Debug.Log($"GameManager: Package delivered ({deliveredPackages}/{requiredPackages})");
+        OnPackageDelivered?.Invoke(deliveredPackages, requiredPackages);
+
+        if (deliveredPackages >= requiredPackages)
         {
-            HandleWin();
+            EnterWin();
+            return;
         }
+
+        SetState(GameState.Delivered);
+        StartStateRoutine(TransitionToNoPackageAfterCooldown());
+    }
+
+    public void TriggerGameOver()
+    {
+        EnterGameOver("Obstacle hit");
+    }
+
+    public void RestartGame()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+
+        if (activeScene.buildIndex >= 0)
+            SceneManager.LoadScene(activeScene.buildIndex);
         else
-        {
-            if (StateMachine.Instance?.character?.carriedPackage != null)
-                StateMachine.Instance.character.carriedPackage.SetActive(false);
-            StateMachine.Instance?.ChangeState(StateMachine.Instance.GetDeliveredState());
-        }
+            SceneManager.LoadScene(activeScene.name);
     }
 
-    private void HandleObstacleHit()
+    private void StartGame()
     {
-        HandleGameOver("Obstacle hit");
+        ResolveReferences();
+        StopStateRoutine();
+
+        deliveredPackages = 0;
+        hasPackage = false;
+        gameStarted = true;
+        currentFuel = maxFuel;
+
+        SetCarriedPackageVisible(false);
+        helicopterController?.SetInputEnabled(true);
+
+        Debug.Log($"GameManager: Starting game, required packages: {requiredPackages}");
+        SetState(GameState.Start);
+        OnGameStart?.Invoke(requiredPackages);
+        OnFuelChanged?.Invoke(currentFuel, maxFuel);
+
+        StartStateRoutine(TransitionFromStart());
     }
 
-    private void HandleGameOver(string reason)
+    private IEnumerator TransitionFromStart()
     {
-        if (isGameOver)
+        if (startDelay > 0f)
+            yield return new WaitForSeconds(startDelay);
+
+        SetState(GameState.NoPackage);
+    }
+
+    private IEnumerator TransitionToNoPackageAfterCooldown()
+    {
+        if (deliveryCooldown > 0f)
+            yield return new WaitForSeconds(deliveryCooldown);
+
+        if (currentState == GameState.Delivered)
+            SetState(GameState.NoPackage);
+    }
+
+    private void EnterGameOver(string reason)
+    {
+        if (currentState == GameState.GameOver || currentState == GameState.Win)
             return;
 
-        isGameOver = true;
+        StopStateRoutine();
+        hasPackage = false;
+        SetCarriedPackageVisible(false);
+        helicopterController?.SetInputEnabled(false);
+
         Debug.Log($"GameManager: Game over ({reason})");
-        if (StateMachine.Instance?.character?.carriedPackage != null)
-            StateMachine.Instance.character.carriedPackage.SetActive(false);
-        StateMachine.Instance?.ChangeState(StateMachine.Instance.GetGameOverState());
-        GameOver?.Invoke();
+        SetState(GameState.GameOver);
+        OnGameOver?.Invoke();
     }
 
-    private void HandleWin()
+    private void EnterWin()
     {
-        if (isWin)
+        if (currentState == GameState.Win || currentState == GameState.GameOver)
             return;
 
-        isWin = true;
+        StopStateRoutine();
+        hasPackage = false;
+        SetCarriedPackageVisible(false);
+        helicopterController?.SetInputEnabled(false);
+        LevelProgress.CompleteLevel(levelIndex);
+
         Debug.Log("GameManager: Win condition reached");
-        if (StateMachine.Instance?.character?.carriedPackage != null)
-            StateMachine.Instance.character.carriedPackage.SetActive(false);
-        StateMachine.Instance?.ChangeState(StateMachine.Instance.GetWinState());
-        Win?.Invoke();
+        SetState(GameState.Win);
+        OnWin?.Invoke();
+    }
+
+    private bool ShouldDrainFuel()
+    {
+        return currentState == GameState.NoPackage ||
+               currentState == GameState.Package ||
+               currentState == GameState.Delivered;
+    }
+
+    private void SetState(GameState newState)
+    {
+        if (currentState == newState)
+            return;
+
+        currentState = newState;
+        Debug.Log($"GameManager: State changed to {newState}");
+        OnStateChanged?.Invoke(newState);
+    }
+
+    private void StartStateRoutine(IEnumerator routine)
+    {
+        StopStateRoutine();
+        stateRoutine = StartCoroutine(routine);
+    }
+
+    private void StopStateRoutine()
+    {
+        if (stateRoutine == null)
+            return;
+
+        StopCoroutine(stateRoutine);
+        stateRoutine = null;
+    }
+
+    private void SetCarriedPackageVisible(bool visible)
+    {
+        if (carriedPackage != null)
+            carriedPackage.SetActive(visible);
+    }
+
+    private void ResolveReferences()
+    {
+        if (helicopterController == null)
+            helicopterController = FindFirstObjectByType<HelicopterController>();
+
+        if (carriedPackage == null && helicopterController != null)
+        {
+            Transform packageTransform = helicopterController.transform.Find("carriedPackage");
+            if (packageTransform == null)
+                packageTransform = helicopterController.transform.Find("Held Package");
+
+            if (packageTransform != null)
+                carriedPackage = packageTransform.gameObject;
+        }
     }
 }

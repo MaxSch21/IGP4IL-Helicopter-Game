@@ -51,11 +51,11 @@ public class UIManager : MonoBehaviour
         if (subscribedToGameManager) return;
         if (GameManager.Instance == null) return;
 
-        GameManager.Instance.PackageDelivered += OnPackageDelivered;
-        GameManager.Instance.GameOver += OnGameOver;
-        GameManager.Instance.Win += OnWin;
-        GameManager.Instance.GameStart += OnGameStart;
-        GameManager.Instance.FuelChanged += OnFuelChanged;
+        GameManager.Instance.OnPackageDelivered += OnPackageDelivered;
+        GameManager.Instance.OnGameOver += OnGameOver;
+        GameManager.Instance.OnWin += OnWin;
+        GameManager.Instance.OnGameStart += OnGameStart;
+        GameManager.Instance.OnFuelChanged += OnFuelChanged;
         subscribedToGameManager = true;
         GameManager.Instance.NotifyUIState();
     }
@@ -65,30 +65,29 @@ public class UIManager : MonoBehaviour
         if (!subscribedToGameManager) return;
         if (GameManager.Instance == null) return;
 
-        GameManager.Instance.PackageDelivered -= OnPackageDelivered;
-        GameManager.Instance.GameOver -= OnGameOver;
-        GameManager.Instance.Win -= OnWin;
-        GameManager.Instance.GameStart -= OnGameStart;
-        GameManager.Instance.FuelChanged -= OnFuelChanged;
+        GameManager.Instance.OnPackageDelivered -= OnPackageDelivered;
+        GameManager.Instance.OnGameOver -= OnGameOver;
+        GameManager.Instance.OnWin -= OnWin;
+        GameManager.Instance.OnGameStart -= OnGameStart;
+        GameManager.Instance.OnFuelChanged -= OnFuelChanged;
         subscribedToGameManager = false;
     }
 
     public void OnGameStart(int maxPackages)
     {
-        Debug.Log($"UIManager received GameStart(max={maxPackages})");
+        Debug.Log($"UIManager: Game started, required packages: {maxPackages}");
         HidePanels();
         SetDeliveryText($"0/{maxPackages}");
     }
 
     public void OnPackageDelivered(int current, int max)
     {
-        Debug.Log($"UIManager received PackageDelivered ({current}/{max})");
+        Debug.Log($"UIManager: Package delivered ({current}/{max})");
         SetDeliveryText($"{current}/{max}");
     }
 
     public void OnFuelChanged(float current, float max)
     {
-        Debug.Log($"UIManager received FuelChanged ({current}/{max})");
         if (fuelSlider != null)
         {
             fuelSlider.maxValue = max;
@@ -98,14 +97,14 @@ public class UIManager : MonoBehaviour
 
     public void OnGameOver()
     {
-        Debug.Log("UIManager received GameOver");
+        Debug.Log("UIManager: Game over");
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
     }
 
     public void OnWin()
     {
-        Debug.Log("UIManager received Win");
+        Debug.Log("UIManager: Win");
         if (winPanel != null)
             winPanel.SetActive(true);
     }

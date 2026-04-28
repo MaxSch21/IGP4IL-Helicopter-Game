@@ -175,7 +175,6 @@ MonoBehaviour:
   maxVerticalSpeed: 8
   verticalDamping: 2
   gravityScale: 1
-  carriedPackage: {fileID: 4969930631824496267}
 --- !u!61 &7806257634412097103
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -248,7 +247,7 @@ GameObject:
   - component: {fileID: 6664205061336445650}
   m_Layer: 0
   m_Name: Held Package
-  m_TagString: Package
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -360,7 +359,7 @@ SpringJoint2D:
   m_Anchor: {x: 0, y: 0}
   m_ConnectedAnchor: {x: 0, y: 0}
   m_AutoConfigureDistance: 0
-  m_Distance: 2
+  m_Distance: 1
   m_DampingRatio: 1
   m_Frequency: 1
 --- !u!1 &8863675150603592367
