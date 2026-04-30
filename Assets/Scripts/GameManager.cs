@@ -31,13 +31,20 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float maxFuel = 100f;
     [SerializeField] private float fuelConsumptionRate = 5f;
 
+    [Header("Helicopter Damage")]
+    [SerializeField] private int maxHeliCondition = 3;
+    [SerializeField] private float damageCooldown = 1f;
+
     [SerializeField] private GameState currentState = GameState.Start;
 
     private bool hasPackage;
     private bool gameStarted;
     private int deliveredPackages;
+    private int heliCondition;
     private float currentFuel;
+    private bool canTakeDamage = true;
     private Coroutine stateRoutine;
+    private Coroutine damageCooldownRoutine;
 
     public event Action<int> OnGameStart;
     public event Action<int, int> OnPackageDelivered;
@@ -45,11 +52,14 @@ public class GameManager : MonoBehaviour
     public event Action OnGameOver;
     public event Action OnWin;
     public event Action<GameState> OnStateChanged;
+    public event Action<int, int> OnHeliConditionChanged;
 
     public GameState CurrentState => currentState;
     public bool HasPackage => hasPackage;
     public int DeliveredPackages => deliveredPackages;
     public int RequiredPackages => requiredPackages;
+    public int CurrentHeliCondition => heliCondition;
+    public int MaxHeliCondition => maxHeliCondition;
     public float CurrentFuel => currentFuel;
     public float MaxFuel => maxFuel;
 
@@ -104,6 +114,7 @@ public class GameManager : MonoBehaviour
         OnGameStart?.Invoke(requiredPackages);
         OnPackageDelivered?.Invoke(deliveredPackages, requiredPackages);
         OnFuelChanged?.Invoke(currentFuel, maxFuel);
+        OnHeliConditionChanged?.Invoke(heliCondition, maxHeliCondition);
 
         if (currentState == GameState.GameOver)
             OnGameOver?.Invoke();
@@ -137,6 +148,7 @@ public class GameManager : MonoBehaviour
 
         Debug.Log($"GameManager: Package delivered ({deliveredPackages}/{requiredPackages})");
         OnPackageDelivered?.Invoke(deliveredPackages, requiredPackages);
+        ScoreManager.Instance?.AddPackageScore();
 
         if (deliveredPackages >= requiredPackages)
         {
@@ -153,8 +165,40 @@ public class GameManager : MonoBehaviour
         EnterGameOver("Obstacle hit");
     }
 
+    public void TriggerGameOver(string reason)
+    {
+        EnterGameOver(reason);
+    }
+
+    public void TakeRotorHit()
+    {
+        TriggerGameOver("Rotor hit");
+    }
+
+    public void TakeBodyHit()
+    {
+        if (!canTakeDamage)
+            return;
+
+        canTakeDamage = false;
+        heliCondition = Mathf.Max(0, heliCondition - 1);
+
+        Debug.Log($"GameManager: Helicopter condition {heliCondition}/{maxHeliCondition}");
+        OnHeliConditionChanged?.Invoke(heliCondition, maxHeliCondition);
+
+        if (heliCondition <= 0)
+        {
+            TriggerGameOver("Body destroyed");
+            return;
+        }
+
+        StartDamageCooldownRoutine();
+    }
+
     public void RestartGame()
     {
+        ScoreManager.Instance?.ResetScore();
+
         Scene activeScene = SceneManager.GetActiveScene();
 
         if (activeScene.buildIndex >= 0)
@@ -167,11 +211,15 @@ public class GameManager : MonoBehaviour
     {
         ResolveReferences();
         StopStateRoutine();
+        StopDamageCooldownRoutine();
+        ScoreManager.Instance?.ResetScore();
 
         deliveredPackages = 0;
         hasPackage = false;
         gameStarted = true;
         currentFuel = maxFuel;
+        heliCondition = maxHeliCondition;
+        canTakeDamage = true;
 
         SetCarriedPackageVisible(false);
         helicopterController?.SetInputEnabled(true);
@@ -180,6 +228,7 @@ public class GameManager : MonoBehaviour
         SetState(GameState.Start);
         OnGameStart?.Invoke(requiredPackages);
         OnFuelChanged?.Invoke(currentFuel, maxFuel);
+        OnHeliConditionChanged?.Invoke(heliCondition, maxHeliCondition);
 
         StartStateRoutine(TransitionFromStart());
     }
@@ -207,6 +256,7 @@ public class GameManager : MonoBehaviour
             return;
 
         StopStateRoutine();
+        StopDamageCooldownRoutine();
         hasPackage = false;
         SetCarriedPackageVisible(false);
         helicopterController?.SetInputEnabled(false);
@@ -222,6 +272,7 @@ public class GameManager : MonoBehaviour
             return;
 
         StopStateRoutine();
+        StopDamageCooldownRoutine();
         hasPackage = false;
         SetCarriedPackageVisible(false);
         helicopterController?.SetInputEnabled(false);
@@ -229,6 +280,7 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("GameManager: Win condition reached");
         SetState(GameState.Win);
+        ScoreManager.Instance?.FinalizeScore((int)currentFuel);
         OnWin?.Invoke();
     }
 
@@ -262,6 +314,36 @@ public class GameManager : MonoBehaviour
 
         StopCoroutine(stateRoutine);
         stateRoutine = null;
+    }
+
+    private void StartDamageCooldownRoutine()
+    {
+        StopDamageCooldownRoutine();
+
+        if (damageCooldown <= 0f)
+        {
+            canTakeDamage = true;
+            return;
+        }
+
+        damageCooldownRoutine = StartCoroutine(DamageCooldown());
+    }
+
+    private IEnumerator DamageCooldown()
+    {
+        yield return new WaitForSeconds(damageCooldown);
+        canTakeDamage = true;
+        damageCooldownRoutine = null;
+    }
+
+    private void StopDamageCooldownRoutine()
+    {
+        if (damageCooldownRoutine == null)
+            return;
+
+        StopCoroutine(damageCooldownRoutine);
+        damageCooldownRoutine = null;
+        canTakeDamage = true;
     }
 
     private void SetCarriedPackageVisible(bool visible)

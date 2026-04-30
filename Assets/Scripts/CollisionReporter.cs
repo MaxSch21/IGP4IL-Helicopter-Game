@@ -3,6 +3,9 @@ using UnityEngine;
 [RequireComponent(typeof(Collider2D))]
 public class CollisionReporter : MonoBehaviour
 {
+    [Header("Damage")]
+    [SerializeField] private DamageZoneType damageZoneType = DamageZoneType.Body;
+
     void OnTriggerEnter2D(Collider2D other)
     {
         Report(other?.gameObject);
@@ -18,7 +21,7 @@ public class CollisionReporter : MonoBehaviour
         if (other == null) return;
 
         var tag = other.tag;
-        if (tag != "Package" && tag != "DropZone" && tag != "Obstacle")
+        if (tag != "Package" && tag != "DropZone" && tag != "Obstacle" && tag != "Wall")
             return;
 
         var manager = GameManager.Instance;
@@ -33,9 +36,12 @@ public class CollisionReporter : MonoBehaviour
                 manager.TryDeliverPackage();
                 break;
             case "Obstacle":
-				manager.TriggerGameOver();
+            case "Wall":
+                if (damageZoneType == DamageZoneType.Rotor)
+                    manager.TakeRotorHit();
+                else
+                    manager.TakeBodyHit();
                 break;
-                
         }
     }
 }

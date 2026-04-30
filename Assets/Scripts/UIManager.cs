@@ -8,12 +8,17 @@ public class UIManager : MonoBehaviour
     public static UIManager Instance { get; private set; }
 
     [SerializeField] private TMP_Text deliveryText;
+    [SerializeField] private TMP_Text temporaryScoreText;
     [SerializeField] private GameObject winPanel;
     [SerializeField] private GameObject gameOverPanel;
+    [SerializeField] private TMP_Text winFinalScoreText;
+    [SerializeField] private TMP_Text winHighScoreText;
+    [SerializeField] private TMP_Text newHighScoreMessageText;
     [SerializeField] private Slider fuelSlider;
     [SerializeField, Min(0f)] private float gameOverPanelDelay = 1f;
 
     private bool subscribedToGameManager;
+    private bool subscribedToScoreManager;
     private Coroutine gameOverRoutine;
 
     void Awake()
@@ -30,19 +35,24 @@ public class UIManager : MonoBehaviour
     void OnEnable()
     {
         SubscribeToGameManager();
+        SubscribeToScoreManager();
     }
 
     void Start()
     {
         HidePanels();
         SetDeliveryText("0/0");
+        SetTemporaryScoreText(0);
+        SetWinScoreTexts(0, 0, false);
         SubscribeToGameManager();
+        SubscribeToScoreManager();
     }
 
     void OnDisable()
     {
         StopGameOverRoutine();
         UnsubscribeFromGameManager();
+        UnsubscribeFromScoreManager();
     }
 
     void OnDestroy()
@@ -61,6 +71,7 @@ public class UIManager : MonoBehaviour
         GameManager.Instance.OnWin += OnWin;
         GameManager.Instance.OnGameStart += OnGameStart;
         GameManager.Instance.OnFuelChanged += OnFuelChanged;
+        GameManager.Instance.OnHeliConditionChanged += OnHeliConditionChanged;
         subscribedToGameManager = true;
         GameManager.Instance.NotifyUIState();
     }
@@ -75,7 +86,30 @@ public class UIManager : MonoBehaviour
         GameManager.Instance.OnWin -= OnWin;
         GameManager.Instance.OnGameStart -= OnGameStart;
         GameManager.Instance.OnFuelChanged -= OnFuelChanged;
+        GameManager.Instance.OnHeliConditionChanged -= OnHeliConditionChanged;
         subscribedToGameManager = false;
+    }
+
+    void SubscribeToScoreManager()
+    {
+        if (subscribedToScoreManager) return;
+        if (ScoreManager.Instance == null) return;
+
+        ScoreManager.Instance.OnTemporaryScoreChanged += OnTemporaryScoreChanged;
+        ScoreManager.Instance.OnFinalScoreChanged += OnFinalScoreChanged;
+        subscribedToScoreManager = true;
+
+        OnTemporaryScoreChanged(ScoreManager.Instance.TemporaryScore);
+    }
+
+    void UnsubscribeFromScoreManager()
+    {
+        if (!subscribedToScoreManager) return;
+        if (ScoreManager.Instance == null) return;
+
+        ScoreManager.Instance.OnTemporaryScoreChanged -= OnTemporaryScoreChanged;
+        ScoreManager.Instance.OnFinalScoreChanged -= OnFinalScoreChanged;
+        subscribedToScoreManager = false;
     }
 
     public void OnGameStart(int maxPackages)
@@ -85,6 +119,8 @@ public class UIManager : MonoBehaviour
         SetGameplayPaused(false);
         HidePanels();
         SetDeliveryText($"0/{maxPackages}");
+        SetTemporaryScoreText(0);
+        SetWinScoreTexts(0, 0, false);
     }
 
     public void OnPackageDelivered(int current, int max)
@@ -117,12 +153,29 @@ public class UIManager : MonoBehaviour
             winPanel.SetActive(true);
     }
 
+    public void OnHeliConditionChanged(int current, int max)
+    {
+        Debug.Log($"Heli Condition: {current}/{max}");
+    }
+
+    public void OnTemporaryScoreChanged(int score)
+    {
+        SetTemporaryScoreText(score);
+    }
+
+    public void OnFinalScoreChanged(int finalScore, int highScore, bool isNewHighScore)
+    {
+        SetWinScoreTexts(finalScore, highScore, isNewHighScore);
+    }
+
     private void HidePanels()
     {
         if (winPanel != null)
             winPanel.SetActive(false);
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
+        if (newHighScoreMessageText != null)
+            newHighScoreMessageText.gameObject.SetActive(false);
     }
 
     private void StartGameOverRoutine()
@@ -165,5 +218,27 @@ public class UIManager : MonoBehaviour
     {
         if (deliveryText != null)
             deliveryText.text = value;
+    }
+
+    private void SetTemporaryScoreText(int score)
+    {
+        if (temporaryScoreText != null)
+            temporaryScoreText.text = $"Score: {score}";
+    }
+
+    private void SetWinScoreTexts(int finalScore, int highScore, bool isNewHighScore)
+    {
+        if (winFinalScoreText != null)
+            winFinalScoreText.text = $"Final Score: {finalScore}";
+
+        if (winHighScoreText != null)
+            winHighScoreText.text = $"Highscore: {highScore}";
+
+        if (newHighScoreMessageText != null)
+        {
+            newHighScoreMessageText.gameObject.SetActive(isNewHighScore);
+            if (isNewHighScore)
+                newHighScoreMessageText.text = "New Highscore!";
+        }
     }
 }
