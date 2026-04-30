@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 
 public class UIManager : MonoBehaviour
 {
@@ -10,7 +11,10 @@ public class UIManager : MonoBehaviour
     [SerializeField] private GameObject winPanel;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private Slider fuelSlider;
+    [SerializeField, Min(0f)] private float gameOverPanelDelay = 1f;
+
     private bool subscribedToGameManager;
+    private Coroutine gameOverRoutine;
 
     void Awake()
     {
@@ -37,6 +41,7 @@ public class UIManager : MonoBehaviour
 
     void OnDisable()
     {
+        StopGameOverRoutine();
         UnsubscribeFromGameManager();
     }
 
@@ -76,6 +81,8 @@ public class UIManager : MonoBehaviour
     public void OnGameStart(int maxPackages)
     {
         Debug.Log($"UIManager: Game started, required packages: {maxPackages}");
+        StopGameOverRoutine();
+        SetGameplayPaused(false);
         HidePanels();
         SetDeliveryText($"0/{maxPackages}");
     }
@@ -98,13 +105,14 @@ public class UIManager : MonoBehaviour
     public void OnGameOver()
     {
         Debug.Log("UIManager: Game over");
-        if (gameOverPanel != null)
-            gameOverPanel.SetActive(true);
+        StartGameOverRoutine();
     }
 
     public void OnWin()
     {
         Debug.Log("UIManager: Win");
+        StopGameOverRoutine();
+        SetGameplayPaused(false);
         if (winPanel != null)
             winPanel.SetActive(true);
     }
@@ -115,6 +123,42 @@ public class UIManager : MonoBehaviour
             winPanel.SetActive(false);
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
+    }
+
+    private void StartGameOverRoutine()
+    {
+        StopGameOverRoutine();
+        gameOverRoutine = StartCoroutine(ShowGameOverPanelAfterDelay());
+    }
+
+    private void StopGameOverRoutine()
+    {
+        if (gameOverRoutine == null)
+            return;
+
+        StopCoroutine(gameOverRoutine);
+        gameOverRoutine = null;
+    }
+
+    private IEnumerator ShowGameOverPanelAfterDelay()
+    {
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
+
+        if (gameOverPanelDelay > 0f)
+            yield return new WaitForSecondsRealtime(gameOverPanelDelay);
+
+        SetGameplayPaused(true);
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(true);
+
+        gameOverRoutine = null;
+    }
+
+    private void SetGameplayPaused(bool paused)
+    {
+        Time.timeScale = paused ? 0f : 1f;
     }
 
     private void SetDeliveryText(string value)

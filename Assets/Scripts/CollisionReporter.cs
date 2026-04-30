@@ -33,8 +33,9 @@ public class CollisionReporter : MonoBehaviour
                 manager.TryDeliverPackage();
                 break;
             case "Obstacle":
-                manager.TriggerGameOver();
+				manager.TriggerGameOver();
                 break;
+                
         }
     }
 }

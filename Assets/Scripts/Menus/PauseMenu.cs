@@ -1,7 +1,8 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class PauseMenu : MonoBehaviour
+public class 
+    escPauseMenu : MonoBehaviour
 {
     [Header("UI")]
     [SerializeField] private GameObject pausePanel;
