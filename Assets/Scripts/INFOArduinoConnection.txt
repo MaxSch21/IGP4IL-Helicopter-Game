@@ -1,0 +1,28 @@
+  Was im Projekt gemacht wurde:
+
+  - Input-Modus eingeführt
+      - KeyboardOnly
+      - ExternalOnly
+      - Damit kann das Spiel später sauber zwischen Tastatur und Arduino umschalten.
+  - Externe Eingabepunkte angelegt
+      - SetHorizontalInputFromArduino(float joystickX)
+      - SetVerticalSpeedFromArduino(float mappedPotValue)
+      - SetExternalInput(float horizontalInput, float verticalSpeed)
+  - Arduino-Eingaben werden nicht von der Tastatur überschrieben
+      - Wenn ExternalOnly aktiv ist, läuft die Keyboard-Logik nicht mehr in Update().
+  - Deadzone ergänzt
+      - Kleine Analogschwankungen werden ignoriert.
+      - Das ist wichtig für Joystick und Potentiometer, damit der Heli nicht zittert.
+  - Umschaltbar per Code
+      - SetInputSourceMode(...)
+      - Damit kannst du später im Menü oder per Debug-Taste zwischen Keyboard und Arduino wechseln.
+
+
+  Was noch nicht drin ist:
+
+  - keine echte Serial-Kommunikation
+  - kein Arduino-Reader-Script
+  - keine Port-Erkennung oder Datenpaket-Parser
+
+  Kurz gesagt:
+  Das Projekt ist jetzt so vorbereitet, dass ein Arduino-Script später nur noch die Werte einlesen und an den HelicopterController durchreichen muss.

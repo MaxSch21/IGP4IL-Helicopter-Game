@@ -3,6 +3,12 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class HelicopterController : MonoBehaviour
 {
+    public enum InputSourceMode
+    {
+        KeyboardOnly,
+        ExternalOnly
+    }
+
     [Header("Horizontal Movement")]
     [Tooltip("Maximum horizontal speed in units/second")]
     public float maxHorizontalSpeed = 5f;
@@ -30,6 +36,10 @@ public class HelicopterController : MonoBehaviour
     [Tooltip("Gravity scale applied to the Rigidbody2D")]
     public float gravityScale = 1f;
 
+    [Header("Input")]
+    [SerializeField] private InputSourceMode inputSourceMode = InputSourceMode.KeyboardOnly;
+    [SerializeField, Range(0f, 1f)] private float externalInputDeadzone = 0.08f;
+
     private Rigidbody2D rb;
     private float currentHorizontalInput;
     private float currentVerticalSpeed;
@@ -48,8 +58,11 @@ public class HelicopterController : MonoBehaviour
     {
         if (inputEnabled)
         {
-            HandleKeyboardHorizontalInput();
-            HandleKeyboardVerticalInput();
+            if (inputSourceMode == InputSourceMode.KeyboardOnly)
+            {
+                HandleKeyboardHorizontalInput();
+                HandleKeyboardVerticalInput();
+            }
         }
 
         UpdateVisualTilt();
@@ -65,7 +78,7 @@ public class HelicopterController : MonoBehaviour
         if (!inputEnabled)
             return;
 
-        currentHorizontalInput = Mathf.Clamp(joystickX, -1f, 1f);
+        currentHorizontalInput = ApplyDeadzoneAndClamp(joystickX);
     }
 
     public void SetVerticalSpeedFromArduino(float mappedPotValue)
@@ -74,6 +87,22 @@ public class HelicopterController : MonoBehaviour
             return;
 
         currentVerticalSpeed = Mathf.Clamp(mappedPotValue, -maxVerticalSpeed, maxVerticalSpeed);
+    }
+
+    public void SetExternalInput(float horizontalInput, float verticalSpeed)
+    {
+        SetHorizontalInputFromArduino(horizontalInput);
+        SetVerticalSpeedFromArduino(verticalSpeed);
+    }
+
+    public void SetInputSourceMode(InputSourceMode mode)
+    {
+        inputSourceMode = mode;
+
+        if (mode == InputSourceMode.KeyboardOnly)
+            return;
+
+        currentHorizontalInput = ApplyDeadzoneAndClamp(currentHorizontalInput);
     }
 
     public void SetInputEnabled(bool enabled)
@@ -127,6 +156,16 @@ public class HelicopterController : MonoBehaviour
             horizontalAcceleration * Time.fixedDeltaTime);
 
         rb.linearVelocity = new Vector2(newHorizontalVelocity, currentVerticalSpeed);
+    }
+
+    private float ApplyDeadzoneAndClamp(float value)
+    {
+        float clampedValue = Mathf.Clamp(value, -1f, 1f);
+
+        if (Mathf.Abs(clampedValue) < externalInputDeadzone)
+            return 0f;
+
+        return clampedValue;
     }
 
     private void UpdateVisualTilt()
