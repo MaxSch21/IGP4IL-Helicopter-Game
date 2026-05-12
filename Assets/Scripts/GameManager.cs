@@ -23,6 +23,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Level")]
     [SerializeField] private int levelIndex = 1;
+    [SerializeField] private string nextLevelSceneName;
     [SerializeField] private int requiredPackages = 3;
     [SerializeField] private float startDelay = 0.5f;
     [SerializeField] private float deliveryCooldown = 1f;
@@ -62,6 +63,7 @@ public class GameManager : MonoBehaviour
     public int MaxHeliCondition => maxHeliCondition;
     public float CurrentFuel => currentFuel;
     public float MaxFuel => maxFuel;
+    public bool HasNextLevel => !string.IsNullOrWhiteSpace(nextLevelSceneName) || HasNextSceneInBuildSettings();
 
     void Awake()
     {
@@ -205,6 +207,22 @@ public class GameManager : MonoBehaviour
             SceneManager.LoadScene(activeScene.buildIndex);
         else
             SceneManager.LoadScene(activeScene.name);
+    }
+
+    public void LoadNextLevel()
+    {
+        Time.timeScale = 1f;
+
+        if (!string.IsNullOrWhiteSpace(nextLevelSceneName))
+        {
+            SceneManager.LoadScene(nextLevelSceneName);
+            return;
+        }
+
+        if (TryLoadNextSceneInBuildSettings())
+            return;
+
+        Debug.LogWarning("GameManager: No next level configured.");
     }
 
     private void StartGame()
@@ -366,5 +384,24 @@ public class GameManager : MonoBehaviour
             if (packageTransform != null)
                 carriedPackage = packageTransform.gameObject;
         }
+    }
+
+    private bool TryLoadNextSceneInBuildSettings()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        int nextBuildIndex = activeScene.buildIndex + 1;
+
+        if (activeScene.buildIndex < 0 || nextBuildIndex >= SceneManager.sceneCountInBuildSettings)
+            return false;
+
+        SceneManager.LoadScene(nextBuildIndex);
+        return true;
+    }
+
+    private bool HasNextSceneInBuildSettings()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        int nextBuildIndex = activeScene.buildIndex + 1;
+        return activeScene.buildIndex >= 0 && nextBuildIndex < SceneManager.sceneCountInBuildSettings;
     }
 }

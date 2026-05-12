@@ -14,6 +14,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text winFinalScoreText;
     [SerializeField] private TMP_Text winHighScoreText;
     [SerializeField] private TMP_Text newHighScoreMessageText;
+    [SerializeField] private Button nextLevelButton;
     [SerializeField] private Slider fuelSlider;
     [SerializeField, Min(0f)] private float gameOverPanelDelay = 1f;
 
@@ -151,6 +152,20 @@ public class UIManager : MonoBehaviour
         SetGameplayPaused(false);
         if (winPanel != null)
             winPanel.SetActive(true);
+
+        if (nextLevelButton != null)
+            nextLevelButton.interactable = GameManager.Instance != null && GameManager.Instance.HasNextLevel;
+    }
+
+    public void OnNextLevelClicked()
+    {
+        Debug.Log("UIManager: Next level clicked");
+        SetGameplayPaused(false);
+
+        if (GameManager.Instance != null)
+            GameManager.Instance.LoadNextLevel();
+        else
+            Debug.LogWarning("UIManager: No GameManager available for next level load.");
     }
 
     public void OnHeliConditionChanged(int current, int max)
@@ -176,6 +191,8 @@ public class UIManager : MonoBehaviour
             gameOverPanel.SetActive(false);
         if (newHighScoreMessageText != null)
             newHighScoreMessageText.gameObject.SetActive(false);
+        if (nextLevelButton != null)
+            nextLevelButton.interactable = false;
     }
 
     private void StartGameOverRoutine()

@@ -319,7 +319,7 @@ BoxCollider2D:
   m_CallbackLayers:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
@@ -355,6 +355,8 @@ MonoBehaviour:
   maxVerticalSpeed: 8
   verticalDamping: 2
   gravityScale: 1
+  inputSourceMode: 0
+  externalInputDeadzone: 0.08
 --- !u!114 &6869023360227977513
 MonoBehaviour:
   m_ObjectHideFlags: 0

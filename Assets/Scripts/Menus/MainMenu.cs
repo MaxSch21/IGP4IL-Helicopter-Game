@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
@@ -9,6 +10,7 @@ public class MainMenu : MonoBehaviour
     [Header("Panels")]
     [SerializeField] private GameObject mainPanel;
     [SerializeField] private GameObject levelSelectPanel;
+    [SerializeField] private GameObject settingsPanel;
 
     [Header("Buttons")]
     [SerializeField] private Button playButton;
@@ -27,6 +29,9 @@ public class MainMenu : MonoBehaviour
 
     void Start()
     {
+        if (EventSystem.current == null)
+            Debug.LogWarning("MainMenu: No EventSystem found in this scene. UI clicks will not work.");
+
         ShowMainMenu();
         RefreshLevelButtons();
     }
@@ -38,32 +43,50 @@ public class MainMenu : MonoBehaviour
 
     public void OnPlayClicked()
     {
+        Debug.Log("MainMenu: Play clicked");
         LoadFirstPlayableLevel();
     }
 
     public void OnLevelSelectionClicked()
     {
+        Debug.Log("MainMenu: Level selection clicked");
         ShowLevelSelect();
     }
 
     public void OnBackClicked()
     {
+        Debug.Log("MainMenu: Back clicked");
+        ShowMainMenu();
+    }
+
+    public void OnSettingsClicked()
+    {
+        Debug.Log("MainMenu: Settings clicked");
+        ShowSettings();
+    }
+
+    public void OnSettingsBackClicked()
+    {
+        Debug.Log("MainMenu: Settings back clicked");
         ShowMainMenu();
     }
 
     public void OnQuitClicked()
     {
+        Debug.Log("MainMenu: Quit clicked");
         Application.Quit();
     }
 
     public void OnLevelClicked(int levelIndex)
     {
+        Debug.Log($"MainMenu: Level clicked {levelIndex}");
         LevelData level = levels.Find(candidate => candidate != null && candidate.levelIndex == levelIndex);
         LoadLevel(level);
     }
 
     public void OnLevelClicked(LevelData level)
     {
+        Debug.Log($"MainMenu: Level clicked {level?.levelIndex ?? 0}");
         LoadLevel(level);
     }
 
@@ -138,6 +161,7 @@ public class MainMenu : MonoBehaviour
     private void ShowMainMenu()
     {
         SetPanelActive(mainPanel, true);
+        SetPanelActive(settingsPanel, false);
         SetPanelActive(levelSelectPanel, false);
     }
 
@@ -146,6 +170,14 @@ public class MainMenu : MonoBehaviour
         RefreshLevelButtons();
         SetPanelActive(mainPanel, false);
         SetPanelActive(levelSelectPanel, true);
+        SetPanelActive(settingsPanel, false);
+    }
+
+    private void ShowSettings()
+    {
+        SetPanelActive(mainPanel, false);
+        SetPanelActive(levelSelectPanel, false);
+        SetPanelActive(settingsPanel, true);
     }
 
     private void LoadFirstPlayableLevel()
