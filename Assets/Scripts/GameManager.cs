@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
         NoPackage,
         Package,
         Delivered,
+        FuelDepleted,
         GameOver,
         Win
     }
@@ -43,6 +44,7 @@ public class GameManager : MonoBehaviour
     private int deliveredPackages;
     private int heliCondition;
     private float currentFuel;
+    private bool fuelDepleted;
     private bool canTakeDamage = true;
     private Coroutine stateRoutine;
     private Coroutine damageCooldownRoutine;
@@ -57,6 +59,7 @@ public class GameManager : MonoBehaviour
 
     public GameState CurrentState => currentState;
     public bool HasPackage => hasPackage;
+    public bool IsFuelDepleted => fuelDepleted;
     public int DeliveredPackages => deliveredPackages;
     public int RequiredPackages => requiredPackages;
     public int CurrentHeliCondition => heliCondition;
@@ -104,8 +107,8 @@ public class GameManager : MonoBehaviour
         currentFuel = Mathf.Max(0f, currentFuel - consumption * Time.deltaTime);
         OnFuelChanged?.Invoke(currentFuel, maxFuel);
 
-        if (currentFuel <= 0f)
-            EnterGameOver("Fuel depleted");
+        if (currentFuel <= 0f && !fuelDepleted)
+            EnterFuelDepleted();
     }
 
     public void NotifyUIState()
@@ -139,6 +142,18 @@ public class GameManager : MonoBehaviour
         SetState(GameState.Package);
     }
 
+    public void AddFuel(float amount)
+    {
+        if (amount <= 0f || currentState == GameState.GameOver || currentState == GameState.Win)
+            return;
+
+        currentFuel = Mathf.Min(maxFuel, currentFuel + amount);
+        OnFuelChanged?.Invoke(currentFuel, maxFuel);
+
+        if (fuelDepleted && currentState == GameState.FuelDepleted && currentFuel > 0f)
+            Debug.Log($"GameManager: Fuel restored to {currentFuel}/{maxFuel}");
+    }
+
     public void TryDeliverPackage()
     {
         if (currentState != GameState.Package || !hasPackage)
@@ -170,6 +185,14 @@ public class GameManager : MonoBehaviour
     public void TriggerGameOver(string reason)
     {
         EnterGameOver(reason);
+    }
+
+    public void TryFuelDepletedGroundHit()
+    {
+        if (!fuelDepleted || currentState != GameState.FuelDepleted)
+            return;
+
+        EnterGameOver("Fuel depleted ground hit", true);
     }
 
     public void TakeRotorHit()
@@ -237,10 +260,12 @@ public class GameManager : MonoBehaviour
         gameStarted = true;
         currentFuel = maxFuel;
         heliCondition = maxHeliCondition;
+        fuelDepleted = false;
         canTakeDamage = true;
 
         SetCarriedPackageVisible(false);
         helicopterController?.SetInputEnabled(true);
+        helicopterController?.SetCrashMode(false);
 
         Debug.Log($"GameManager: Starting game, required packages: {requiredPackages}");
         SetState(GameState.Start);
@@ -268,7 +293,7 @@ public class GameManager : MonoBehaviour
             SetState(GameState.NoPackage);
     }
 
-    private void EnterGameOver(string reason)
+    private void EnterGameOver(string reason, bool fuelDepleted = false)
     {
         if (currentState == GameState.GameOver || currentState == GameState.Win)
             return;
@@ -277,11 +302,27 @@ public class GameManager : MonoBehaviour
         StopDamageCooldownRoutine();
         hasPackage = false;
         SetCarriedPackageVisible(false);
+        helicopterController?.SetCrashMode(fuelDepleted);
         helicopterController?.SetInputEnabled(false);
 
         Debug.Log($"GameManager: Game over ({reason})");
         SetState(GameState.GameOver);
         OnGameOver?.Invoke();
+    }
+
+    private void EnterFuelDepleted()
+    {
+        if (currentState == GameState.GameOver || currentState == GameState.Win || fuelDepleted)
+            return;
+
+        fuelDepleted = true;
+        StopStateRoutine();
+        StopDamageCooldownRoutine();
+        helicopterController?.SetCrashMode(true);
+        helicopterController?.SetInputEnabled(false);
+
+        Debug.Log("GameManager: Fuel depleted, crash mode enabled");
+        SetState(GameState.FuelDepleted);
     }
 
     private void EnterWin()
@@ -293,6 +334,7 @@ public class GameManager : MonoBehaviour
         StopDamageCooldownRoutine();
         hasPackage = false;
         SetCarriedPackageVisible(false);
+        helicopterController?.SetCrashMode(false);
         helicopterController?.SetInputEnabled(false);
         LevelProgress.CompleteLevel(levelIndex);
 

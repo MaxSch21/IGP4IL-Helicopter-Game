@@ -355,6 +355,7 @@ MonoBehaviour:
   maxVerticalSpeed: 8
   verticalDamping: 2
   gravityScale: 1
+  crashGravityScale: 25
   inputSourceMode: 0
   externalInputDeadzone: 0.08
 --- !u!114 &6869023360227977513

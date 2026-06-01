@@ -12,6 +12,7 @@ public class PlayerDamageVFXController : MonoBehaviour
 
     private ParticleSystem.EmissionModule emissionModule;
     private bool hasEmissionModule;
+    private ParticleSystem[] playerEffects;
 
     private void Awake()
     {
@@ -19,6 +20,9 @@ public class PlayerDamageVFXController : MonoBehaviour
 
         if (damagedEffect == null)
             damagedEffect = FindDamagedEffect();
+
+        if (playerEffects == null || playerEffects.Length == 0)
+            playerEffects = GetComponentsInChildren<ParticleSystem>(true);
     }
 
     private void OnEnable()
@@ -34,7 +38,7 @@ public class PlayerDamageVFXController : MonoBehaviour
     private void OnDisable()
     {
         UnbindEvents();
-        StopEffect();
+        StopAllEffects();
     }
 
     private void Update()
@@ -54,6 +58,8 @@ public class PlayerDamageVFXController : MonoBehaviour
         gameManager.OnHeliConditionChanged += HandleHeliConditionChanged;
         gameManager.OnGameStart -= HandleGameResetStart;
         gameManager.OnGameStart += HandleGameResetStart;
+        gameManager.OnStateChanged -= HandleStateChanged;
+        gameManager.OnStateChanged += HandleStateChanged;
         gameManager.OnGameOver -= HandleGameResetImmediate;
         gameManager.OnGameOver += HandleGameResetImmediate;
         gameManager.OnWin -= HandleGameResetImmediate;
@@ -69,6 +75,7 @@ public class PlayerDamageVFXController : MonoBehaviour
 
         gameManager.OnHeliConditionChanged -= HandleHeliConditionChanged;
         gameManager.OnGameStart -= HandleGameResetStart;
+        gameManager.OnStateChanged -= HandleStateChanged;
         gameManager.OnGameOver -= HandleGameResetImmediate;
         gameManager.OnWin -= HandleGameResetImmediate;
     }
@@ -94,7 +101,17 @@ public class PlayerDamageVFXController : MonoBehaviour
 
     private void HandleGameResetImmediate()
     {
-        StopEffect();
+        StopAllEffects();
+    }
+
+    private void HandleStateChanged(GameManager.GameState state)
+    {
+        if (state == GameManager.GameState.FuelDepleted ||
+            state == GameManager.GameState.GameOver ||
+            state == GameManager.GameState.Win)
+        {
+            StopAllEffects();
+        }
     }
 
     private void PlayEffect()
@@ -119,6 +136,25 @@ public class PlayerDamageVFXController : MonoBehaviour
         damagedEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         if (damagedEffect.gameObject.activeSelf)
             damagedEffect.gameObject.SetActive(false);
+    }
+
+    private void StopAllEffects()
+    {
+        if (playerEffects == null || playerEffects.Length == 0)
+            playerEffects = GetComponentsInChildren<ParticleSystem>(true);
+
+        if (playerEffects == null)
+            return;
+
+        foreach (ParticleSystem effect in playerEffects)
+        {
+            if (effect == null)
+                continue;
+
+            effect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            if (effect.gameObject.activeSelf)
+                effect.gameObject.SetActive(false);
+        }
     }
 
     private void UpdateEmissionRate()

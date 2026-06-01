@@ -36,6 +36,9 @@ public class HelicopterController : MonoBehaviour
     [Tooltip("Gravity scale applied to the Rigidbody2D")]
     public float gravityScale = 1f;
 
+    [Header("Crash")]
+    [SerializeField, Min(0f)] private float crashGravityScale = 20f;
+
     [Header("Input")]
     [SerializeField] private InputSourceMode inputSourceMode = InputSourceMode.KeyboardOnly;
     [SerializeField, Range(0f, 1f)] private float externalInputDeadzone = 0.08f;
@@ -44,12 +47,15 @@ public class HelicopterController : MonoBehaviour
     private float currentHorizontalInput;
     private float currentVerticalSpeed;
     private bool inputEnabled = true;
+    private float baseGravityScale;
+    private bool crashMode;
 
     public float CurrentVerticalSpeed => currentVerticalSpeed;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        baseGravityScale = gravityScale;
         rb.gravityScale = gravityScale;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
     }
@@ -115,8 +121,18 @@ public class HelicopterController : MonoBehaviour
         currentHorizontalInput = 0f;
         currentVerticalSpeed = 0f;
 
-        if (rb != null)
+        if (rb != null && !crashMode)
             rb.linearVelocity = Vector2.zero;
+    }
+
+    public void SetCrashMode(bool enabled)
+    {
+        crashMode = enabled;
+
+        if (rb == null)
+            return;
+
+        rb.gravityScale = enabled ? crashGravityScale : baseGravityScale;
     }
 
     private void HandleKeyboardHorizontalInput()

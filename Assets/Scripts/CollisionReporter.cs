@@ -36,8 +36,15 @@ public class CollisionReporter : MonoBehaviour
                 manager.TryDeliverPackage();
                 break;
             case "Obstacle":
-            case "Wall":
                 if (damageZoneType == DamageZoneType.Rotor)
+                    manager.TakeRotorHit();
+                else
+                    manager.TakeBodyHit();
+                break;
+            case "Wall":
+                if (manager.IsFuelDepleted)
+                    manager.TryFuelDepletedGroundHit();
+                else if (damageZoneType == DamageZoneType.Rotor)
                     manager.TakeRotorHit();
                 else
                     manager.TakeBodyHit();
