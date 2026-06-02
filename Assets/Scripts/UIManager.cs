@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TMP_Text newHighScoreMessageText;
     [SerializeField] private Button nextLevelButton;
     [SerializeField] private Slider fuelSlider;
+    [SerializeField] private WinStarSlot[] winStarSlots;
     [SerializeField, Min(0f)] private float gameOverPanelDelay = 1f;
 
     private bool subscribedToGameManager;
@@ -45,6 +46,7 @@ public class UIManager : MonoBehaviour
         SetDeliveryText("0/0");
         SetTemporaryScoreText(0);
         SetWinScoreTexts(0, 0, false);
+        ResetWinStars();
         SubscribeToGameManager();
         SubscribeToScoreManager();
     }
@@ -122,6 +124,7 @@ public class UIManager : MonoBehaviour
         SetDeliveryText($"0/{maxPackages}");
         SetTemporaryScoreText(0);
         SetWinScoreTexts(0, 0, false);
+        ResetWinStars();
     }
 
     public void OnPackageDelivered(int current, int max)
@@ -152,6 +155,8 @@ public class UIManager : MonoBehaviour
         SetGameplayPaused(false);
         if (winPanel != null)
             winPanel.SetActive(true);
+
+        UpdateWinStars();
 
         if (nextLevelButton != null)
             nextLevelButton.interactable = GameManager.Instance != null && GameManager.Instance.HasNextLevel;
@@ -256,6 +261,36 @@ public class UIManager : MonoBehaviour
             newHighScoreMessageText.gameObject.SetActive(isNewHighScore);
             if (isNewHighScore)
                 newHighScoreMessageText.text = "New Highscore!";
+        }
+    }
+
+    private void UpdateWinStars()
+    {
+        int filledStars = 0;
+
+        if (GameManager.Instance != null)
+            filledStars = StarEvaluator.Evaluate(GameManager.Instance.LastLevelResult);
+
+        SetWinStars(filledStars);
+    }
+
+    private void ResetWinStars()
+    {
+        SetWinStars(0);
+    }
+
+    private void SetWinStars(int filledStars)
+    {
+        if (winStarSlots == null)
+            return;
+
+        for (int i = 0; i < winStarSlots.Length; i++)
+        {
+            WinStarSlot slot = winStarSlots[i];
+            if (slot == null)
+                continue;
+
+            slot.SetFilled(i < filledStars);
         }
     }
 }

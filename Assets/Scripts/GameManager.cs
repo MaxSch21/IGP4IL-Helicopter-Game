@@ -28,6 +28,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int requiredPackages = 3;
     [SerializeField] private float startDelay = 0.5f;
     [SerializeField] private float deliveryCooldown = 1f;
+    [SerializeField] private float estimatedTimeSeconds = 60f;
 
     [Header("Fuel")]
     [SerializeField] private float maxFuel = 100f;
@@ -48,6 +49,8 @@ public class GameManager : MonoBehaviour
     private bool canTakeDamage = true;
     private Coroutine stateRoutine;
     private Coroutine damageCooldownRoutine;
+    private float levelStartTime;
+    private LevelResult lastLevelResult;
 
     public event Action<int> OnGameStart;
     public event Action<int, int> OnPackageDelivered;
@@ -66,6 +69,9 @@ public class GameManager : MonoBehaviour
     public int MaxHeliCondition => maxHeliCondition;
     public float CurrentFuel => currentFuel;
     public float MaxFuel => maxFuel;
+    public float EstimatedTimeSeconds => estimatedTimeSeconds;
+    public float ElapsedTime => gameStarted ? Mathf.Max(0f, Time.time - levelStartTime) : 0f;
+    public LevelResult LastLevelResult => lastLevelResult;
     public bool HasNextLevel => !string.IsNullOrWhiteSpace(nextLevelSceneName) || HasNextSceneInBuildSettings();
 
     void Awake()
@@ -78,6 +84,7 @@ public class GameManager : MonoBehaviour
 
         Instance = this;
         ResolveReferences();
+        ApplyLevelRuntimeConfiguration();
     }
 
     void Start()
@@ -238,6 +245,7 @@ public class GameManager : MonoBehaviour
 
         if (!string.IsNullOrWhiteSpace(nextLevelSceneName))
         {
+            LevelRuntime.Clear();
             SceneManager.LoadScene(nextLevelSceneName);
             return;
         }
@@ -251,6 +259,7 @@ public class GameManager : MonoBehaviour
     private void StartGame()
     {
         ResolveReferences();
+        ApplyLevelRuntimeConfiguration();
         StopStateRoutine();
         StopDamageCooldownRoutine();
         ScoreManager.Instance?.ResetScore();
@@ -262,6 +271,8 @@ public class GameManager : MonoBehaviour
         heliCondition = maxHeliCondition;
         fuelDepleted = false;
         canTakeDamage = true;
+        levelStartTime = Time.time;
+        lastLevelResult = default;
 
         SetCarriedPackageVisible(false);
         helicopterController?.SetInputEnabled(true);
@@ -337,6 +348,7 @@ public class GameManager : MonoBehaviour
         helicopterController?.SetCrashMode(false);
         helicopterController?.SetInputEnabled(false);
         LevelProgress.CompleteLevel(levelIndex);
+        lastLevelResult = BuildLevelResult();
 
         Debug.Log("GameManager: Win condition reached");
         SetState(GameState.Win);
@@ -428,6 +440,32 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    private void ApplyLevelRuntimeConfiguration()
+    {
+        if (!LevelRuntime.HasLevelData || !LevelRuntime.Current.IsValid)
+            return;
+
+        LevelRuntimeData runtime = LevelRuntime.Current;
+        levelIndex = runtime.LevelIndex;
+        requiredPackages = runtime.RequiredPackages;
+        maxFuel = runtime.StartFuel;
+        estimatedTimeSeconds = runtime.EstimatedTimeSeconds;
+    }
+
+    private LevelResult BuildLevelResult()
+    {
+        return new LevelResult
+        {
+            LevelIndex = levelIndex,
+            PackagesDelivered = deliveredPackages,
+            RequiredPackages = requiredPackages,
+            DamageTaken = Mathf.Max(0, maxHeliCondition - heliCondition),
+            FuelRemaining = currentFuel,
+            ElapsedSeconds = ElapsedTime,
+            EstimatedTimeSeconds = estimatedTimeSeconds
+        };
+    }
+
     private bool TryLoadNextSceneInBuildSettings()
     {
         Scene activeScene = SceneManager.GetActiveScene();
@@ -436,6 +474,7 @@ public class GameManager : MonoBehaviour
         if (activeScene.buildIndex < 0 || nextBuildIndex >= SceneManager.sceneCountInBuildSettings)
             return false;
 
+        LevelRuntime.Clear();
         SceneManager.LoadScene(nextBuildIndex);
         return true;
     }

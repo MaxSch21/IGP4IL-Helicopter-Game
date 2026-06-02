@@ -222,6 +222,7 @@ public class MainMenu : MonoBehaviour
         }
 
         Time.timeScale = 1f;
+        LevelRuntime.Set(level);
         Debug.Log($"MainMenu: Loading {level.displayName} ({level.sceneName})");
         SceneManager.LoadScene(level.sceneName);
     }
