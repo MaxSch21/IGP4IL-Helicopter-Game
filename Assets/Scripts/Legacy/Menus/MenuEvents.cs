@@ -1,5 +1,6 @@
 using System;
 
+// Legacy event bus: retained only for reference/compatibility with recovery assets.
 public static class MenuEvents
 {
     public static MenuState CurrentState { get; private set; } = MenuState.Main;

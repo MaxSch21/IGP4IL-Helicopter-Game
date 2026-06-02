@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+// Legacy visual: replaced by DeliveryStationVisual in active prefabs.
 public class DeliveryGoalVisual : MonoBehaviour
 {
     [Header("Dummy Packages")]

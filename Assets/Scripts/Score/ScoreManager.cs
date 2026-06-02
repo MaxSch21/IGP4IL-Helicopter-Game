@@ -30,7 +30,7 @@ public class ScoreManager : MonoBehaviour
         }
 
         Instance = this;
-        highScore = PlayerPrefs.GetInt(highScoreKey, 0);
+        highScore = LoadHighScore();
     }
 
     private void OnDestroy()
@@ -45,6 +45,7 @@ public class ScoreManager : MonoBehaviour
         finalScore = 0;
         isNewHighScore = false;
         OnTemporaryScoreChanged?.Invoke(temporaryScore);
+        OnFinalScoreChanged?.Invoke(finalScore, highScore, isNewHighScore);
     }
 
     public void AddPackageScore()
@@ -53,10 +54,10 @@ public class ScoreManager : MonoBehaviour
         OnTemporaryScoreChanged?.Invoke(temporaryScore);
     }
 
-    public void FinalizeScore(int fuelBonusPoints = 0)
+    public void FinalizeScore(int fuelBonusPoints = 0, int starBonusPoints = 0)
     {
-        finalScore = temporaryScore + Mathf.Max(0, fuelBonusPoints);
-        highScore = PlayerPrefs.GetInt(highScoreKey, 0);
+        finalScore = temporaryScore + Mathf.Max(0, fuelBonusPoints) + Mathf.Max(0, starBonusPoints);
+        highScore = LoadHighScore();
 
         if (finalScore > highScore)
         {
@@ -71,5 +72,10 @@ public class ScoreManager : MonoBehaviour
         }
 
         OnFinalScoreChanged?.Invoke(finalScore, highScore, isNewHighScore);
+    }
+
+    private int LoadHighScore()
+    {
+        return PlayerPrefs.GetInt(highScoreKey, 0);
     }
 }

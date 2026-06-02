@@ -1,5 +1,7 @@
 using UnityEngine;
 
+// Legacy menu system: not used by the active project flow.
+// MainMenu handles main-menu scene UI, UIManager handles win/game-over HUD, and PauseMenu handles pause UI.
 public enum MenuState
 {
     Main,

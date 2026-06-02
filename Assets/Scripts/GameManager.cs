@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    private const int StarBonusPoints = 100;
+
     public enum GameState
     {
         Start,
@@ -16,12 +18,14 @@ public class GameManager : MonoBehaviour
         Win
     }
 
+    // Singleton / References
     public static GameManager Instance { get; private set; }
 
     [Header("Player References")]
     [SerializeField] private HelicopterController helicopterController;
     [SerializeField] private GameObject carriedPackage;
 
+    // Serialized Settings
     [Header("Level")]
     [SerializeField] private int levelIndex = 1;
     [SerializeField] private string nextLevelSceneName;
@@ -35,11 +39,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private float fuelConsumptionRate = 5f;
 
     [Header("Helicopter Damage")]
-    [SerializeField] private int maxHeliCondition = 3;
+    [SerializeField] private int maxHeliCondition = 4;
     [SerializeField] private float damageCooldown = 1f;
 
     [SerializeField] private GameState currentState = GameState.Start;
 
+    // Runtime State
     private bool hasPackage;
     private bool gameStarted;
     private int deliveredPackages;
@@ -50,8 +55,10 @@ public class GameManager : MonoBehaviour
     private Coroutine stateRoutine;
     private Coroutine damageCooldownRoutine;
     private float levelStartTime;
+    private float levelEndTime;
     private LevelResult lastLevelResult;
 
+    // Events
     public event Action<int> OnGameStart;
     public event Action<int, int> OnPackageDelivered;
     public event Action<float, float> OnFuelChanged;
@@ -70,11 +77,12 @@ public class GameManager : MonoBehaviour
     public float CurrentFuel => currentFuel;
     public float MaxFuel => maxFuel;
     public float EstimatedTimeSeconds => estimatedTimeSeconds;
-    public float ElapsedTime => gameStarted ? Mathf.Max(0f, Time.time - levelStartTime) : 0f;
+    public float ElapsedTime => gameStarted ? Mathf.Max(0f, GetLevelTimeReference() - levelStartTime) : 0f;
     public LevelResult LastLevelResult => lastLevelResult;
     public bool HasNextLevel => !string.IsNullOrWhiteSpace(nextLevelSceneName) || HasNextSceneInBuildSettings();
 
-    void Awake()
+    // Unity Lifecycle
+    private void Awake()
     {
         if (Instance != null && Instance != this)
         {
@@ -87,37 +95,26 @@ public class GameManager : MonoBehaviour
         ApplyLevelRuntimeConfiguration();
     }
 
-    void Start()
+    private void Start()
     {
         StartGame();
     }
 
-    void OnDestroy()
+    private void OnDestroy()
     {
         if (Instance == this)
             Instance = null;
     }
 
-    void Update()
+    private void Update()
     {
         if (!ShouldDrainFuel())
             return;
 
-        float consumption = fuelConsumptionRate;
-        if (helicopterController != null)
-        {
-            float verticalSpeed = Mathf.Abs(helicopterController.CurrentVerticalSpeed);
-            float maxVertical = Mathf.Max(1f, helicopterController.maxVerticalSpeed);
-            consumption *= 1f + verticalSpeed / maxVertical;
-        }
-
-        currentFuel = Mathf.Max(0f, currentFuel - consumption * Time.deltaTime);
-        OnFuelChanged?.Invoke(currentFuel, maxFuel);
-
-        if (currentFuel <= 0f && !fuelDepleted)
-            EnterFuelDepleted();
+        DrainFuelOverTime();
     }
 
+    // Level Setup / Restart
     public void NotifyUIState()
     {
         if (!gameStarted)
@@ -134,6 +131,156 @@ public class GameManager : MonoBehaviour
             OnWin?.Invoke();
     }
 
+    public void RestartGame()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+
+        if (activeScene.buildIndex >= 0)
+            SceneManager.LoadScene(activeScene.buildIndex);
+        else
+            SceneManager.LoadScene(activeScene.name);
+    }
+
+    public void LoadNextLevel()
+    {
+        Time.timeScale = 1f;
+
+        if (!string.IsNullOrWhiteSpace(nextLevelSceneName))
+        {
+            LevelRuntime.Clear();
+            SceneManager.LoadScene(nextLevelSceneName);
+            return;
+        }
+
+        if (TryLoadNextSceneInBuildSettings())
+            return;
+
+        Debug.LogWarning("GameManager: No next level configured.");
+    }
+
+    private void StartGame()
+    {
+        ResolveReferences();
+        ApplyLevelRuntimeConfiguration();
+        StopStateRoutine();
+        StopDamageCooldownRoutine();
+        ScoreManager.Instance?.ResetScore();
+
+        deliveredPackages = 0;
+        hasPackage = false;
+        gameStarted = true;
+        currentFuel = maxFuel;
+        heliCondition = maxHeliCondition;
+        fuelDepleted = false;
+        canTakeDamage = true;
+        levelStartTime = Time.time;
+        levelEndTime = 0f;
+        lastLevelResult = default;
+
+        SetCarriedPackageVisible(false);
+        SetPlayerActiveState(true, false);
+
+        Debug.Log($"GameManager: Starting game, required packages: {requiredPackages}");
+        SetState(GameState.Start);
+        OnGameStart?.Invoke(requiredPackages);
+        OnFuelChanged?.Invoke(currentFuel, maxFuel);
+        OnHeliConditionChanged?.Invoke(heliCondition, maxHeliCondition);
+
+        StartStateRoutine(TransitionFromStart());
+    }
+
+    private void ApplyLevelRuntimeConfiguration()
+    {
+        if (!LevelRuntime.HasLevelData || !LevelRuntime.Current.IsValid)
+            return;
+
+        LevelRuntimeData runtime = LevelRuntime.Current;
+        levelIndex = runtime.LevelIndex;
+        requiredPackages = runtime.RequiredPackages;
+        maxFuel = runtime.StartFuel;
+        estimatedTimeSeconds = runtime.EstimatedTimeSeconds;
+    }
+
+    private void ResolveReferences()
+    {
+        if (helicopterController == null)
+            helicopterController = FindFirstObjectByType<HelicopterController>();
+
+        if (carriedPackage == null && helicopterController != null)
+        {
+            Transform packageTransform = helicopterController.transform.Find("carriedPackage");
+            if (packageTransform == null)
+                packageTransform = helicopterController.transform.Find("Held Package");
+
+            if (packageTransform != null)
+                carriedPackage = packageTransform.gameObject;
+        }
+    }
+
+    private bool TryLoadNextSceneInBuildSettings()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        int nextBuildIndex = activeScene.buildIndex + 1;
+
+        if (activeScene.buildIndex < 0 || nextBuildIndex >= SceneManager.sceneCountInBuildSettings)
+            return false;
+
+        LevelRuntime.Clear();
+        SceneManager.LoadScene(nextBuildIndex);
+        return true;
+    }
+
+    private bool HasNextSceneInBuildSettings()
+    {
+        Scene activeScene = SceneManager.GetActiveScene();
+        int nextBuildIndex = activeScene.buildIndex + 1;
+        return activeScene.buildIndex >= 0 && nextBuildIndex < SceneManager.sceneCountInBuildSettings;
+    }
+
+    // State Changes
+    private void SetState(GameState newState)
+    {
+        if (currentState == newState)
+            return;
+
+        currentState = newState;
+        Debug.Log($"GameManager: State changed to {newState}");
+        OnStateChanged?.Invoke(newState);
+    }
+
+    private void StartStateRoutine(IEnumerator routine)
+    {
+        StopStateRoutine();
+        stateRoutine = StartCoroutine(routine);
+    }
+
+    private void StopStateRoutine()
+    {
+        if (stateRoutine == null)
+            return;
+
+        StopCoroutine(stateRoutine);
+        stateRoutine = null;
+    }
+
+    private IEnumerator TransitionFromStart()
+    {
+        if (startDelay > 0f)
+            yield return new WaitForSeconds(startDelay);
+
+        SetState(GameState.NoPackage);
+    }
+
+    private IEnumerator TransitionToNoPackageAfterCooldown()
+    {
+        if (deliveryCooldown > 0f)
+            yield return new WaitForSeconds(deliveryCooldown);
+
+        if (currentState == GameState.Delivered)
+            SetState(GameState.NoPackage);
+    }
+
+    // Package Logic
     public void TryPickupPackage(GameObject packageObject)
     {
         if (currentState != GameState.NoPackage || hasPackage)
@@ -147,18 +294,6 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("GameManager: Package picked up");
         SetState(GameState.Package);
-    }
-
-    public void AddFuel(float amount)
-    {
-        if (amount <= 0f || currentState == GameState.GameOver || currentState == GameState.Win)
-            return;
-
-        currentFuel = Mathf.Min(maxFuel, currentFuel + amount);
-        OnFuelChanged?.Invoke(currentFuel, maxFuel);
-
-        if (fuelDepleted && currentState == GameState.FuelDepleted && currentFuel > 0f)
-            Debug.Log($"GameManager: Fuel restored to {currentFuel}/{maxFuel}");
     }
 
     public void TryDeliverPackage()
@@ -184,6 +319,63 @@ public class GameManager : MonoBehaviour
         StartStateRoutine(TransitionToNoPackageAfterCooldown());
     }
 
+    private void SetCarriedPackageVisible(bool visible)
+    {
+        if (carriedPackage != null)
+            carriedPackage.SetActive(visible);
+    }
+
+    // Fuel Logic
+    public void AddFuel(float amount)
+    {
+        if (amount <= 0f || IsInTerminalState())
+            return;
+
+        currentFuel = Mathf.Min(maxFuel, currentFuel + amount);
+        OnFuelChanged?.Invoke(currentFuel, maxFuel);
+
+        if (fuelDepleted && currentState == GameState.FuelDepleted && currentFuel > 0f)
+            Debug.Log($"GameManager: Fuel restored to {currentFuel}/{maxFuel}");
+    }
+
+    public void RepairHelicopter(int amount = 1)
+    {
+        if (amount <= 0 || IsInTerminalState())
+            return;
+
+        int newCondition = Mathf.Min(maxHeliCondition, heliCondition + amount);
+        if (newCondition == heliCondition)
+            return;
+
+        heliCondition = newCondition;
+        OnHeliConditionChanged?.Invoke(heliCondition, maxHeliCondition);
+    }
+
+    private void DrainFuelOverTime()
+    {
+        float consumption = fuelConsumptionRate;
+        if (helicopterController != null)
+        {
+            float verticalSpeed = Mathf.Abs(helicopterController.CurrentVerticalSpeed);
+            float maxVertical = Mathf.Max(1f, helicopterController.maxVerticalSpeed);
+            consumption *= 1f + verticalSpeed / maxVertical;
+        }
+
+        currentFuel = Mathf.Max(0f, currentFuel - consumption * Time.deltaTime);
+        OnFuelChanged?.Invoke(currentFuel, maxFuel);
+
+        if (currentFuel <= 0f && !fuelDepleted)
+            EnterFuelDepleted();
+    }
+
+    private bool ShouldDrainFuel()
+    {
+        return currentState == GameState.NoPackage ||
+               currentState == GameState.Package ||
+               currentState == GameState.Delivered;
+    }
+
+    // Damage Logic
     public void TriggerGameOver()
     {
         EnterGameOver("Obstacle hit");
@@ -227,167 +419,6 @@ public class GameManager : MonoBehaviour
         StartDamageCooldownRoutine();
     }
 
-    public void RestartGame()
-    {
-        ScoreManager.Instance?.ResetScore();
-
-        Scene activeScene = SceneManager.GetActiveScene();
-
-        if (activeScene.buildIndex >= 0)
-            SceneManager.LoadScene(activeScene.buildIndex);
-        else
-            SceneManager.LoadScene(activeScene.name);
-    }
-
-    public void LoadNextLevel()
-    {
-        Time.timeScale = 1f;
-
-        if (!string.IsNullOrWhiteSpace(nextLevelSceneName))
-        {
-            LevelRuntime.Clear();
-            SceneManager.LoadScene(nextLevelSceneName);
-            return;
-        }
-
-        if (TryLoadNextSceneInBuildSettings())
-            return;
-
-        Debug.LogWarning("GameManager: No next level configured.");
-    }
-
-    private void StartGame()
-    {
-        ResolveReferences();
-        ApplyLevelRuntimeConfiguration();
-        StopStateRoutine();
-        StopDamageCooldownRoutine();
-        ScoreManager.Instance?.ResetScore();
-
-        deliveredPackages = 0;
-        hasPackage = false;
-        gameStarted = true;
-        currentFuel = maxFuel;
-        heliCondition = maxHeliCondition;
-        fuelDepleted = false;
-        canTakeDamage = true;
-        levelStartTime = Time.time;
-        lastLevelResult = default;
-
-        SetCarriedPackageVisible(false);
-        helicopterController?.SetInputEnabled(true);
-        helicopterController?.SetCrashMode(false);
-
-        Debug.Log($"GameManager: Starting game, required packages: {requiredPackages}");
-        SetState(GameState.Start);
-        OnGameStart?.Invoke(requiredPackages);
-        OnFuelChanged?.Invoke(currentFuel, maxFuel);
-        OnHeliConditionChanged?.Invoke(heliCondition, maxHeliCondition);
-
-        StartStateRoutine(TransitionFromStart());
-    }
-
-    private IEnumerator TransitionFromStart()
-    {
-        if (startDelay > 0f)
-            yield return new WaitForSeconds(startDelay);
-
-        SetState(GameState.NoPackage);
-    }
-
-    private IEnumerator TransitionToNoPackageAfterCooldown()
-    {
-        if (deliveryCooldown > 0f)
-            yield return new WaitForSeconds(deliveryCooldown);
-
-        if (currentState == GameState.Delivered)
-            SetState(GameState.NoPackage);
-    }
-
-    private void EnterGameOver(string reason, bool fuelDepleted = false)
-    {
-        if (currentState == GameState.GameOver || currentState == GameState.Win)
-            return;
-
-        StopStateRoutine();
-        StopDamageCooldownRoutine();
-        hasPackage = false;
-        SetCarriedPackageVisible(false);
-        helicopterController?.SetCrashMode(fuelDepleted);
-        helicopterController?.SetInputEnabled(false);
-
-        Debug.Log($"GameManager: Game over ({reason})");
-        SetState(GameState.GameOver);
-        OnGameOver?.Invoke();
-    }
-
-    private void EnterFuelDepleted()
-    {
-        if (currentState == GameState.GameOver || currentState == GameState.Win || fuelDepleted)
-            return;
-
-        fuelDepleted = true;
-        StopStateRoutine();
-        StopDamageCooldownRoutine();
-        helicopterController?.SetCrashMode(true);
-        helicopterController?.SetInputEnabled(false);
-
-        Debug.Log("GameManager: Fuel depleted, crash mode enabled");
-        SetState(GameState.FuelDepleted);
-    }
-
-    private void EnterWin()
-    {
-        if (currentState == GameState.Win || currentState == GameState.GameOver)
-            return;
-
-        StopStateRoutine();
-        StopDamageCooldownRoutine();
-        hasPackage = false;
-        SetCarriedPackageVisible(false);
-        helicopterController?.SetCrashMode(false);
-        helicopterController?.SetInputEnabled(false);
-        LevelProgress.CompleteLevel(levelIndex);
-        lastLevelResult = BuildLevelResult();
-
-        Debug.Log("GameManager: Win condition reached");
-        SetState(GameState.Win);
-        ScoreManager.Instance?.FinalizeScore((int)currentFuel);
-        OnWin?.Invoke();
-    }
-
-    private bool ShouldDrainFuel()
-    {
-        return currentState == GameState.NoPackage ||
-               currentState == GameState.Package ||
-               currentState == GameState.Delivered;
-    }
-
-    private void SetState(GameState newState)
-    {
-        if (currentState == newState)
-            return;
-
-        currentState = newState;
-        Debug.Log($"GameManager: State changed to {newState}");
-        OnStateChanged?.Invoke(newState);
-    }
-
-    private void StartStateRoutine(IEnumerator routine)
-    {
-        StopStateRoutine();
-        stateRoutine = StartCoroutine(routine);
-    }
-
-    private void StopStateRoutine()
-    {
-        if (stateRoutine == null)
-            return;
-
-        StopCoroutine(stateRoutine);
-        stateRoutine = null;
-    }
-
     private void StartDamageCooldownRoutine()
     {
         StopDamageCooldownRoutine();
@@ -418,38 +449,68 @@ public class GameManager : MonoBehaviour
         canTakeDamage = true;
     }
 
-    private void SetCarriedPackageVisible(bool visible)
+    // Win / GameOver Logic
+    private void EnterFuelDepleted()
     {
-        if (carriedPackage != null)
-            carriedPackage.SetActive(visible);
-    }
-
-    private void ResolveReferences()
-    {
-        if (helicopterController == null)
-            helicopterController = FindFirstObjectByType<HelicopterController>();
-
-        if (carriedPackage == null && helicopterController != null)
-        {
-            Transform packageTransform = helicopterController.transform.Find("carriedPackage");
-            if (packageTransform == null)
-                packageTransform = helicopterController.transform.Find("Held Package");
-
-            if (packageTransform != null)
-                carriedPackage = packageTransform.gameObject;
-        }
-    }
-
-    private void ApplyLevelRuntimeConfiguration()
-    {
-        if (!LevelRuntime.HasLevelData || !LevelRuntime.Current.IsValid)
+        if (IsInTerminalState() || fuelDepleted)
             return;
 
-        LevelRuntimeData runtime = LevelRuntime.Current;
-        levelIndex = runtime.LevelIndex;
-        requiredPackages = runtime.RequiredPackages;
-        maxFuel = runtime.StartFuel;
-        estimatedTimeSeconds = runtime.EstimatedTimeSeconds;
+        fuelDepleted = true;
+        StopStateRoutine();
+        StopDamageCooldownRoutine();
+        SetPlayerActiveState(false, true);
+
+        Debug.Log("GameManager: Fuel depleted, crash mode enabled");
+        SetState(GameState.FuelDepleted);
+    }
+
+    private void EnterGameOver(string reason, bool fuelDepleted = false)
+    {
+        if (IsInTerminalState())
+            return;
+
+        levelEndTime = Time.time;
+        StopStateRoutine();
+        StopDamageCooldownRoutine();
+        hasPackage = false;
+        SetCarriedPackageVisible(false);
+        SetPlayerActiveState(false, fuelDepleted);
+
+        Debug.Log($"GameManager: Game over ({reason})");
+        SetState(GameState.GameOver);
+        OnGameOver?.Invoke();
+    }
+
+    private void EnterWin()
+    {
+        if (IsInTerminalState())
+            return;
+
+        levelEndTime = Time.time;
+        StopStateRoutine();
+        StopDamageCooldownRoutine();
+        hasPackage = false;
+        SetCarriedPackageVisible(false);
+        SetPlayerActiveState(false, false);
+        LevelProgress.CompleteLevel(levelIndex);
+        lastLevelResult = BuildLevelResult();
+        int earnedStars = StarEvaluator.Evaluate(lastLevelResult);
+
+        Debug.Log("GameManager: Win condition reached");
+        SetState(GameState.Win);
+        ScoreManager.Instance?.FinalizeScore((int)currentFuel, earnedStars * StarBonusPoints);
+        OnWin?.Invoke();
+    }
+
+    private void SetPlayerActiveState(bool inputEnabled, bool crashModeEnabled)
+    {
+        helicopterController?.SetCrashMode(crashModeEnabled);
+        helicopterController?.SetInputEnabled(inputEnabled);
+    }
+
+    private bool IsInTerminalState()
+    {
+        return currentState == GameState.GameOver || currentState == GameState.Win;
     }
 
     private LevelResult BuildLevelResult()
@@ -466,23 +527,8 @@ public class GameManager : MonoBehaviour
         };
     }
 
-    private bool TryLoadNextSceneInBuildSettings()
+    private float GetLevelTimeReference()
     {
-        Scene activeScene = SceneManager.GetActiveScene();
-        int nextBuildIndex = activeScene.buildIndex + 1;
-
-        if (activeScene.buildIndex < 0 || nextBuildIndex >= SceneManager.sceneCountInBuildSettings)
-            return false;
-
-        LevelRuntime.Clear();
-        SceneManager.LoadScene(nextBuildIndex);
-        return true;
-    }
-
-    private bool HasNextSceneInBuildSettings()
-    {
-        Scene activeScene = SceneManager.GetActiveScene();
-        int nextBuildIndex = activeScene.buildIndex + 1;
-        return activeScene.buildIndex >= 0 && nextBuildIndex < SceneManager.sceneCountInBuildSettings;
+        return levelEndTime > 0f ? levelEndTime : Time.time;
     }
 }

@@ -1,5 +1,7 @@
 using UnityEngine;
 
+// Legacy system: no longer used by active gameplay.
+// GameManager.GameState is the only active source of truth for runtime state.
 public class StateMachine : MonoBehaviour
 {
 

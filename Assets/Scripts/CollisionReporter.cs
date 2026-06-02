@@ -8,47 +8,55 @@ public class CollisionReporter : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        Report(other?.gameObject);
+        HandleHit(other?.gameObject);
     }
 
     void OnCollisionEnter2D(Collision2D collision)
     {
-        Report(collision?.gameObject);
+        HandleHit(collision?.gameObject);
     }
 
-    void Report(GameObject other)
+    private void HandleHit(GameObject other)
     {
-        if (other == null) return;
-
-        var tag = other.tag;
-        if (tag != "Package" && tag != "DropZone" && tag != "Obstacle" && tag != "Wall")
+        if (other == null)
             return;
 
-        var manager = GameManager.Instance;
-        if (manager == null) return;
+        GameManager manager = GameManager.Instance;
+        if (manager == null)
+            return;
 
-        switch (tag)
+        if (other.CompareTag("Package"))
         {
-            case "Package":
-                manager.TryPickupPackage(other);
-                break;
-            case "DropZone":
-                manager.TryDeliverPackage();
-                break;
-            case "Obstacle":
-                if (damageZoneType == DamageZoneType.Rotor)
-                    manager.TakeRotorHit();
-                else
-                    manager.TakeBodyHit();
-                break;
-            case "Wall":
-                if (manager.IsFuelDepleted)
-                    manager.TryFuelDepletedGroundHit();
-                else if (damageZoneType == DamageZoneType.Rotor)
-                    manager.TakeRotorHit();
-                else
-                    manager.TakeBodyHit();
-                break;
+            manager.TryPickupPackage(other);
+            return;
         }
+
+        if (other.CompareTag("DropZone"))
+        {
+            manager.TryDeliverPackage();
+            return;
+        }
+
+        if (other.CompareTag("Obstacle") || other.CompareTag("Wall"))
+        {
+            if (manager.CurrentState == GameManager.GameState.FuelDepleted)
+            {
+                manager.TryFuelDepletedGroundHit();
+                return;
+            }
+
+            HandleDamageHit(manager);
+        }
+    }
+
+    private void HandleDamageHit(GameManager manager)
+    {
+        if (damageZoneType == DamageZoneType.Rotor)
+        {
+            manager.TakeRotorHit();
+            return;
+        }
+
+        manager.TakeBodyHit();
     }
 }

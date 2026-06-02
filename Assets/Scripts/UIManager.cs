@@ -5,23 +5,33 @@ using System.Collections;
 
 public class UIManager : MonoBehaviour
 {
+    private const int StarBonusPoints = 100;
+
     public static UIManager Instance { get; private set; }
 
     [SerializeField] private TMP_Text deliveryText;
+    [SerializeField] private TMP_Text timeText;
     [SerializeField] private TMP_Text temporaryScoreText;
     [SerializeField] private GameObject winPanel;
     [SerializeField] private GameObject gameOverPanel;
     [SerializeField] private TMP_Text winFinalScoreText;
     [SerializeField] private TMP_Text winHighScoreText;
+    [SerializeField] private TMP_Text winTimeText;
     [SerializeField] private TMP_Text newHighScoreMessageText;
     [SerializeField] private Button nextLevelButton;
     [SerializeField] private Slider fuelSlider;
+    [SerializeField] private GameObject lowFuelWarningObject;
     [SerializeField] private WinStarSlot[] winStarSlots;
     [SerializeField, Min(0f)] private float gameOverPanelDelay = 1f;
+    [SerializeField, Min(0f)] private float winStarRevealDelay = 0.25f;
+    [SerializeField, Range(0f, 1f)] private float lowFuelWarningThreshold = 0.2f;
+    [SerializeField, Min(0.01f)] private float lowFuelBlinkInterval = 0.35f;
 
     private bool subscribedToGameManager;
     private bool subscribedToScoreManager;
     private Coroutine gameOverRoutine;
+    private Coroutine winStarRoutine;
+    private Coroutine lowFuelWarningRoutine;
 
     void Awake()
     {
@@ -44,16 +54,25 @@ public class UIManager : MonoBehaviour
     {
         HidePanels();
         SetDeliveryText("0/0");
-        SetTemporaryScoreText(0);
-        SetWinScoreTexts(0, 0, false);
+        SetTimeTexts(0f);
         ResetWinStars();
         SubscribeToGameManager();
         SubscribeToScoreManager();
     }
 
+    void Update()
+    {
+        if (GameManager.Instance == null)
+            return;
+
+        SetTimeTexts(GameManager.Instance.ElapsedTime);
+    }
+
     void OnDisable()
     {
         StopGameOverRoutine();
+        StopWinStarRoutine();
+        StopLowFuelWarning();
         UnsubscribeFromGameManager();
         UnsubscribeFromScoreManager();
     }
@@ -103,6 +122,7 @@ public class UIManager : MonoBehaviour
         subscribedToScoreManager = true;
 
         OnTemporaryScoreChanged(ScoreManager.Instance.TemporaryScore);
+        OnFinalScoreChanged(ScoreManager.Instance.FinalScore, ScoreManager.Instance.HighScore, ScoreManager.Instance.IsNewHighScore);
     }
 
     void UnsubscribeFromScoreManager()
@@ -119,11 +139,11 @@ public class UIManager : MonoBehaviour
     {
         Debug.Log($"UIManager: Game started, required packages: {maxPackages}");
         StopGameOverRoutine();
+        StopWinStarRoutine();
         SetGameplayPaused(false);
         HidePanels();
         SetDeliveryText($"0/{maxPackages}");
-        SetTemporaryScoreText(0);
-        SetWinScoreTexts(0, 0, false);
+        SetTimeTexts(0f);
         ResetWinStars();
     }
 
@@ -140,6 +160,8 @@ public class UIManager : MonoBehaviour
             fuelSlider.maxValue = max;
             fuelSlider.value = current;
         }
+
+        UpdateLowFuelWarning(current, max);
     }
 
     public void OnGameOver()
@@ -152,11 +174,12 @@ public class UIManager : MonoBehaviour
     {
         Debug.Log("UIManager: Win");
         StopGameOverRoutine();
+        StopWinStarRoutine();
         SetGameplayPaused(false);
         if (winPanel != null)
             winPanel.SetActive(true);
 
-        UpdateWinStars();
+        StartWinStarRoutine();
 
         if (nextLevelButton != null)
             nextLevelButton.interactable = GameManager.Instance != null && GameManager.Instance.HasNextLevel;
@@ -215,6 +238,56 @@ public class UIManager : MonoBehaviour
         gameOverRoutine = null;
     }
 
+    private void StartWinStarRoutine()
+    {
+        winStarRoutine = StartCoroutine(AnimateWinStars());
+    }
+
+    private void StopWinStarRoutine()
+    {
+        if (winStarRoutine == null)
+            return;
+
+        StopCoroutine(winStarRoutine);
+        winStarRoutine = null;
+    }
+
+    private void UpdateLowFuelWarning(float currentFuel, float maxFuel)
+    {
+        if (lowFuelWarningObject == null || maxFuel <= 0f)
+            return;
+
+        bool shouldWarn = currentFuel > 0f && currentFuel <= maxFuel * lowFuelWarningThreshold;
+
+        if (shouldWarn)
+        {
+            StartLowFuelWarning();
+            return;
+        }
+
+        StopLowFuelWarning();
+    }
+
+    private void StartLowFuelWarning()
+    {
+        if (lowFuelWarningRoutine != null || lowFuelWarningObject == null)
+            return;
+
+        lowFuelWarningRoutine = StartCoroutine(BlinkLowFuelWarning());
+    }
+
+    private void StopLowFuelWarning()
+    {
+        if (lowFuelWarningRoutine != null)
+        {
+            StopCoroutine(lowFuelWarningRoutine);
+            lowFuelWarningRoutine = null;
+        }
+
+        if (lowFuelWarningObject != null)
+            lowFuelWarningObject.SetActive(false);
+    }
+
     private IEnumerator ShowGameOverPanelAfterDelay()
     {
         if (gameOverPanel != null)
@@ -248,6 +321,17 @@ public class UIManager : MonoBehaviour
             temporaryScoreText.text = $"Score: {score}";
     }
 
+    private void SetTimeTexts(float elapsedSeconds)
+    {
+        string formattedTime = $"Time: {FormatTime(elapsedSeconds)}";
+
+        if (timeText != null)
+            timeText.text = formattedTime;
+
+        if (winTimeText != null)
+            winTimeText.text = formattedTime;
+    }
+
     private void SetWinScoreTexts(int finalScore, int highScore, bool isNewHighScore)
     {
         if (winFinalScoreText != null)
@@ -264,14 +348,51 @@ public class UIManager : MonoBehaviour
         }
     }
 
-    private void UpdateWinStars()
+    private IEnumerator AnimateWinStars()
     {
         int filledStars = 0;
+        int targetFinalScore = 0;
+        int highScore = 0;
+        bool isNewHighScore = false;
 
         if (GameManager.Instance != null)
             filledStars = StarEvaluator.Evaluate(GameManager.Instance.LastLevelResult);
 
-        SetWinStars(filledStars);
+        if (ScoreManager.Instance != null)
+        {
+            targetFinalScore = ScoreManager.Instance.FinalScore;
+            highScore = ScoreManager.Instance.HighScore;
+            isNewHighScore = ScoreManager.Instance.IsNewHighScore;
+        }
+
+        int baseFinalScore = Mathf.Max(0, targetFinalScore - filledStars * StarBonusPoints);
+
+        SetWinStars(0);
+        SetWinScoreTexts(baseFinalScore, highScore, isNewHighScore);
+
+        for (int i = 0; i < filledStars; i++)
+        {
+            SetWinStars(i + 1);
+            SetWinScoreTexts(baseFinalScore + (i + 1) * StarBonusPoints, highScore, isNewHighScore);
+
+            if (winStarRevealDelay > 0f && i < filledStars - 1)
+                yield return new WaitForSecondsRealtime(winStarRevealDelay);
+        }
+
+        SetWinScoreTexts(targetFinalScore, highScore, isNewHighScore);
+        winStarRoutine = null;
+    }
+
+    private IEnumerator BlinkLowFuelWarning()
+    {
+        while (true)
+        {
+            lowFuelWarningObject.SetActive(true);
+            yield return new WaitForSeconds(lowFuelBlinkInterval);
+
+            lowFuelWarningObject.SetActive(false);
+            yield return new WaitForSeconds(lowFuelBlinkInterval);
+        }
     }
 
     private void ResetWinStars()
@@ -292,5 +413,13 @@ public class UIManager : MonoBehaviour
 
             slot.SetFilled(i < filledStars);
         }
+    }
+
+    private string FormatTime(float elapsedSeconds)
+    {
+        int totalSeconds = Mathf.Max(0, Mathf.FloorToInt(elapsedSeconds));
+        int minutes = totalSeconds / 60;
+        int seconds = totalSeconds % 60;
+        return $"{minutes:00}:{seconds:00}";
     }
 }

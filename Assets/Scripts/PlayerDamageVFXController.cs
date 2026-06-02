@@ -1,10 +1,13 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class PlayerDamageVFXController : MonoBehaviour
 {
     [SerializeField] private GameManager gameManager;
     [SerializeField] private HelicopterController helicopterController;
-    [SerializeField] private ParticleSystem damagedEffect;
+    [FormerlySerializedAs("damagedEffect")]
+    [SerializeField] private ParticleSystem damagedSmokeEffect;
+    [SerializeField] private ParticleSystem crashEffect;
     [Header("Emission")]
     [SerializeField, Min(0f)] private float maxVerticalSpeedForFullEmission = 8f;
     [SerializeField, Min(0f)] private float minEmissionRate = 0f;
@@ -18,8 +21,8 @@ public class PlayerDamageVFXController : MonoBehaviour
     {
         ResolveReferences();
 
-        if (damagedEffect == null)
-            damagedEffect = FindDamagedEffect();
+        if (damagedSmokeEffect == null)
+            damagedSmokeEffect = FindDamagedEffect();
 
         if (playerEffects == null || playerEffects.Length == 0)
             playerEffects = GetComponentsInChildren<ParticleSystem>(true);
@@ -43,7 +46,7 @@ public class PlayerDamageVFXController : MonoBehaviour
 
     private void Update()
     {
-        UpdateEmissionRate();
+        UpdateSmokeEmissionFromVerticalSpeed();
     }
 
     private void BindEvents()
@@ -56,14 +59,12 @@ public class PlayerDamageVFXController : MonoBehaviour
 
         gameManager.OnHeliConditionChanged -= HandleHeliConditionChanged;
         gameManager.OnHeliConditionChanged += HandleHeliConditionChanged;
-        gameManager.OnGameStart -= HandleGameResetStart;
-        gameManager.OnGameStart += HandleGameResetStart;
-        gameManager.OnStateChanged -= HandleStateChanged;
-        gameManager.OnStateChanged += HandleStateChanged;
-        gameManager.OnGameOver -= HandleGameResetImmediate;
-        gameManager.OnGameOver += HandleGameResetImmediate;
-        gameManager.OnWin -= HandleGameResetImmediate;
-        gameManager.OnWin += HandleGameResetImmediate;
+        gameManager.OnGameStart -= HandleGameStart;
+        gameManager.OnGameStart += HandleGameStart;
+        gameManager.OnGameOver -= HandleGameOver;
+        gameManager.OnGameOver += HandleGameOver;
+        gameManager.OnWin -= HandleWin;
+        gameManager.OnWin += HandleWin;
 
         HandleHeliConditionChanged(gameManager.CurrentHeliCondition, gameManager.MaxHeliCondition);
     }
@@ -74,68 +75,74 @@ public class PlayerDamageVFXController : MonoBehaviour
             return;
 
         gameManager.OnHeliConditionChanged -= HandleHeliConditionChanged;
-        gameManager.OnGameStart -= HandleGameResetStart;
-        gameManager.OnStateChanged -= HandleStateChanged;
-        gameManager.OnGameOver -= HandleGameResetImmediate;
-        gameManager.OnWin -= HandleGameResetImmediate;
+        gameManager.OnGameStart -= HandleGameStart;
+        gameManager.OnGameOver -= HandleGameOver;
+        gameManager.OnWin -= HandleWin;
     }
 
     private void HandleHeliConditionChanged(int current, int max)
     {
-        if (damagedEffect == null)
-            damagedEffect = FindDamagedEffect();
+        if (damagedSmokeEffect == null)
+            damagedSmokeEffect = FindDamagedEffect();
 
-        if (damagedEffect == null)
+        if (damagedSmokeEffect == null)
             return;
 
         if (current < max)
-            PlayEffect();
+            PlaySmokeEffect();
         else
-            StopEffect();
+            StopSmokeEffect();
     }
 
-    private void HandleGameResetStart(int _)
-    {
-        StopEffect();
-    }
-
-    private void HandleGameResetImmediate()
+    private void HandleGameStart(int _)
     {
         StopAllEffects();
     }
 
-    private void HandleStateChanged(GameManager.GameState state)
+    private void HandleGameOver()
     {
-        if (state == GameManager.GameState.FuelDepleted ||
-            state == GameManager.GameState.GameOver ||
-            state == GameManager.GameState.Win)
-        {
-            StopAllEffects();
-        }
+        PlayCrashEffect();
     }
 
-    private void PlayEffect()
+    private void HandleWin()
     {
-        if (damagedEffect == null)
-            return;
-
-        if (!damagedEffect.gameObject.activeSelf)
-            damagedEffect.gameObject.SetActive(true);
-
-        if (!damagedEffect.isPlaying)
-            damagedEffect.Play(true);
-
-        UpdateEmissionRate();
+        StopAllEffects();
     }
 
-    private void StopEffect()
+    private void PlaySmokeEffect()
     {
-        if (damagedEffect == null)
+        if (damagedSmokeEffect == null)
             return;
 
-        damagedEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-        if (damagedEffect.gameObject.activeSelf)
-            damagedEffect.gameObject.SetActive(false);
+        if (!damagedSmokeEffect.gameObject.activeSelf)
+            damagedSmokeEffect.gameObject.SetActive(true);
+
+        if (!damagedSmokeEffect.isPlaying)
+            damagedSmokeEffect.Play(true);
+
+        UpdateSmokeEmissionFromVerticalSpeed();
+    }
+
+    private void StopSmokeEffect()
+    {
+        if (damagedSmokeEffect == null)
+            return;
+
+        damagedSmokeEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        if (damagedSmokeEffect.gameObject.activeSelf)
+            damagedSmokeEffect.gameObject.SetActive(false);
+    }
+
+    private void PlayCrashEffect()
+    {
+        if (crashEffect == null)
+            return;
+
+        if (!crashEffect.gameObject.activeSelf)
+            crashEffect.gameObject.SetActive(true);
+
+        if (!crashEffect.isPlaying)
+            crashEffect.Play(true);
     }
 
     private void StopAllEffects()
@@ -157,9 +164,9 @@ public class PlayerDamageVFXController : MonoBehaviour
         }
     }
 
-    private void UpdateEmissionRate()
+    private void UpdateSmokeEmissionFromVerticalSpeed()
     {
-        if (damagedEffect == null || !damagedEffect.gameObject.activeSelf)
+        if (damagedSmokeEffect == null || !damagedSmokeEffect.gameObject.activeSelf)
             return;
 
         if (helicopterController == null)
@@ -174,7 +181,7 @@ public class PlayerDamageVFXController : MonoBehaviour
 
         if (!hasEmissionModule)
         {
-            emissionModule = damagedEffect.emission;
+            emissionModule = damagedSmokeEffect.emission;
             hasEmissionModule = true;
         }
 

@@ -1,18 +1,19 @@
 using System.Collections;
 using UnityEngine;
 
-public class StartState : State
+// Legacy state: unused by active gameplay.
+public class DeliveredState : State
 {
     private Coroutine transitionCoroutine;
 
-    public StartState(StateMachine machine) : base(machine)
+    public DeliveredState(StateMachine machine) : base(machine)
     {
     }
 
     public override void Enter()
     {
-        Debug.Log("Game Start");
-        transitionCoroutine = machine.StartCoroutine(TransitionToNoPackage());
+        Debug.Log("Package delivered");
+        transitionCoroutine = machine.StartCoroutine(TransitionAfterDelay());
     }
 
     public override void Exit()
@@ -24,9 +25,9 @@ public class StartState : State
         }
     }
 
-    private IEnumerator TransitionToNoPackage()
+    private IEnumerator TransitionAfterDelay()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(1f);
         machine.ChangeState(machine.GetNoPackageState());
     }
 }

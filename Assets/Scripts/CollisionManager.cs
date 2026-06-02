@@ -1,7 +1,9 @@
 using UnityEngine;
 
-// Deprecated: CollisionReporter now sends collision events directly to GameManager.
-// Kept temporarily to avoid missing-script references in old scenes while the project is cleaned up.
+// Deprecated compatibility shim.
+// Active collision routing is handled only by CollisionReporter, which forwards to GameManager.
+// This class remains empty to avoid missing-script references in legacy recovery scenes/assets.
+[System.Obsolete("CollisionManager is unused. Use CollisionReporter for collision forwarding.")]
 public class CollisionManager : MonoBehaviour
 {
 }

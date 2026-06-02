@@ -6,7 +6,8 @@ public class GoalDirectionIndicator : MonoBehaviour
     [Header("Targets")]
     [SerializeField] private Transform target;
     [SerializeField] private Transform player;
-    [SerializeField] private string autoTargetTag = "DropZone";
+    [SerializeField] private string packageTag = "Package";
+    [SerializeField] private string dropZoneTag = "DropZone";
 
     [Header("Scene References")]
     [SerializeField] private Camera worldCamera;
@@ -20,15 +21,22 @@ public class GoalDirectionIndicator : MonoBehaviour
     [SerializeField] private float visibleTargetOffset = 60f;
     [SerializeField] private float rotationOffsetDegrees = -90f;
     [SerializeField] private bool autoFindTarget = true;
+    [SerializeField, Min(0.1f)] private float minScaleMultiplier = 0.55f;
+    [SerializeField, Min(0.01f)] private float distanceForMinScale = 6f;
 
-    void Awake()
+    private Vector3 baseScale = Vector3.one;
+
+    private void Awake()
     {
         ResolveReferences();
+        if (indicator != null)
+            baseScale = indicator.localScale;
     }
 
-    void LateUpdate()
+    private void LateUpdate()
     {
         ResolveReferences();
+        RefreshTarget();
 
         if (indicator == null || canvas == null || worldCamera == null)
             return;
@@ -61,6 +69,7 @@ public class GoalDirectionIndicator : MonoBehaviour
         targetScreenPoint = ClampToScreen(targetScreenPoint);
         indicator.anchoredPosition = ScreenToAnchoredPosition((Vector2)targetScreenPoint);
         indicator.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + rotationOffsetDegrees);
+        UpdateIndicatorScale();
     }
 
     private Vector3 GetReferenceScreenPoint()
@@ -102,7 +111,11 @@ public class GoalDirectionIndicator : MonoBehaviour
     private void ResolveReferences()
     {
         if (indicator == null)
+        {
             indicator = transform as RectTransform;
+            if (indicator != null)
+                baseScale = indicator.localScale;
+        }
 
         if (canvasGroup == null)
             canvasGroup = GetComponent<CanvasGroup>();
@@ -122,13 +135,6 @@ public class GoalDirectionIndicator : MonoBehaviour
             if (helicopter != null)
                 player = helicopter.transform;
         }
-
-        if (target == null && autoFindTarget && !string.IsNullOrWhiteSpace(autoTargetTag))
-        {
-            GameObject targetObject = GameObject.FindWithTag(autoTargetTag);
-            if (targetObject != null)
-                target = targetObject.transform;
-        }
     }
 
     private void SetVisible(bool visible)
@@ -143,5 +149,70 @@ public class GoalDirectionIndicator : MonoBehaviour
 
         if (indicatorGraphic != null)
             indicatorGraphic.enabled = visible;
+    }
+
+    private void RefreshTarget()
+    {
+        if (!autoFindTarget)
+            return;
+
+        GameManager manager = GameManager.Instance;
+        bool shouldPointToDropZone = manager != null && manager.HasPackage;
+        target = shouldPointToDropZone ? FindDropZoneTarget() : FindNearestPackageTarget();
+    }
+
+    private Transform FindNearestPackageTarget()
+    {
+        if (string.IsNullOrWhiteSpace(packageTag))
+            return null;
+
+        GameObject[] packageObjects = GameObject.FindGameObjectsWithTag(packageTag);
+        if (packageObjects == null || packageObjects.Length == 0)
+            return null;
+
+        Vector3 referencePosition = player != null ? player.position : Vector3.zero;
+        Transform nearestTarget = null;
+        float bestDistanceSqr = float.MaxValue;
+
+        for (int i = 0; i < packageObjects.Length; i++)
+        {
+            GameObject packageObject = packageObjects[i];
+            if (packageObject == null || !packageObject.activeInHierarchy)
+                continue;
+
+            float distanceSqr = (packageObject.transform.position - referencePosition).sqrMagnitude;
+            if (distanceSqr >= bestDistanceSqr)
+                continue;
+
+            bestDistanceSqr = distanceSqr;
+            nearestTarget = packageObject.transform;
+        }
+
+        return nearestTarget;
+    }
+
+    private Transform FindDropZoneTarget()
+    {
+        if (string.IsNullOrWhiteSpace(dropZoneTag))
+            return null;
+
+        GameObject dropZoneObject = GameObject.FindWithTag(dropZoneTag);
+        return dropZoneObject != null ? dropZoneObject.transform : null;
+    }
+
+    private void UpdateIndicatorScale()
+    {
+        if (indicator == null || target == null)
+            return;
+
+        float scaleMultiplier = 1f;
+        if (player != null && distanceForMinScale > 0f)
+        {
+            float distance = Vector3.Distance(player.position, target.position);
+            float normalizedDistance = Mathf.Clamp01(distance / distanceForMinScale);
+            scaleMultiplier = Mathf.Lerp(minScaleMultiplier, 1f, normalizedDistance);
+        }
+
+        indicator.localScale = baseScale * scaleMultiplier;
     }
 }

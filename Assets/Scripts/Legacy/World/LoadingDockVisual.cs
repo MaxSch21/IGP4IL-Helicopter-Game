@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Legacy visual: replaced by DeliveryStationVisual in active prefabs.
 public class LoadingDockVisual : MonoBehaviour
 {
     [Header("Dock Slots")]
