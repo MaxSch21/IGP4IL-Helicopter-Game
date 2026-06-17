@@ -1,28 +1,74 @@
-  Was im Projekt gemacht wurde:
+Was im Projekt gemacht wurde:
 
-  - Input-Modus eingeführt
-      - KeyboardOnly
-      - ExternalOnly
-      - Damit kann das Spiel später sauber zwischen Tastatur und Arduino umschalten.
-  - Externe Eingabepunkte angelegt
-      - SetHorizontalInputFromArduino(float joystickX)
-      - SetVerticalSpeedFromArduino(float mappedPotValue)
-      - SetExternalInput(float horizontalInput, float verticalSpeed)
-  - Arduino-Eingaben werden nicht von der Tastatur überschrieben
-      - Wenn ExternalOnly aktiv ist, läuft die Keyboard-Logik nicht mehr in Update().
-  - Deadzone ergänzt
-      - Kleine Analogschwankungen werden ignoriert.
-      - Das ist wichtig für Joystick und Potentiometer, damit der Heli nicht zittert.
-  - Umschaltbar per Code
-      - SetInputSourceMode(...)
-      - Damit kannst du später im Menü oder per Debug-Taste zwischen Keyboard und Arduino wechseln.
+- Input-Modus eingefuehrt
+    - KeyboardOnly
+    - ExternalOnly
+    - Damit kann das Spiel spaeter sauber zwischen Tastatur und Arduino umschalten.
+- Externe Eingabepunkte angelegt
+    - SetHorizontalInputFromArduino(float joystickX)
+    - SetVerticalSpeedFromArduino(float mappedPotValue)
+    - SetExternalInput(float horizontalInput, float verticalSpeed)
+- Arduino-Eingaben werden nicht von der Tastatur ueberschrieben
+    - Wenn ExternalOnly aktiv ist, laeuft die Keyboard-Logik nicht mehr in Update().
+- Deadzone ergaenzt
+    - Kleine Analogschwankungen werden ignoriert.
+    - Das ist wichtig fuer Joystick und Potentiometer, damit der Heli nicht zittert.
+- Umschaltbar per Code
+    - SetInputSourceMode(...)
+    - Damit kannst du spaeter im Menue oder per Debug-Taste zwischen Keyboard und Arduino wechseln.
+- ArduinoActionMapper ergaenzt
+    - Liest Arduino-Input und leitet gemappte Actions an den HelicopterController weiter.
+    - Sendet den Fuel-Wert als Servo-Winkel an den Arduino zurueck.
+    - Benoetigt unter Windows das Define ARDUINO_SERIAL_PORTS.
 
 
-  Was noch nicht drin ist:
+Action-Mapping:
 
-  - keine echte Serial-Kommunikation
-  - kein Arduino-Reader-Script
-  - keine Port-Erkennung oder Datenpaket-Parser
+- Arduino sendet pro Zeile:
+    - joystickX,potentiometer
+    - Beispiel: 512,0
+- Joystick an A0:
+    - links = A / horizontal -1
+    - mitte = 0
+    - rechts = D / horizontal 1
+- Potentiometer an A2:
+    - -100 = Pfeil nach unten / volle Sinkgeschwindigkeit
+    - 0 = keine vertikale Bewegung
+    - 100 = Pfeil nach oben / volle Steiggeschwindigkeit
+- Servo an Output 9:
+    - Fuel voll = Servo rechts / 0 Grad
+    - Fuel leer = Servo links / 180 Grad
+- Display-Pinmapping:
+    - Arduino D2 -> Segment a -> Display Pin 7
+    - Arduino D3 -> Segment b -> Display Pin 6
+    - Arduino D4 -> Segment c -> Display Pin 4
+    - Arduino D5 -> Segment d -> Display Pin 2
+    - Arduino D6 -> Segment e -> Display Pin 1
+    - Arduino D7 -> Segment f -> Display Pin 9
+    - Arduino D8 -> Segment g -> Display Pin 10
+- Unity sendet Fuel an Arduino:
+    - Format: F:winkel
+    - Fuel voll = Servo rechts / 0 Grad
+    - Fuel leer = Servo links / 180 Grad
 
-  Kurz gesagt:
-  Das Projekt ist jetzt so vorbereitet, dass ein Arduino-Script später nur noch die Werte einlesen und an den HelicopterController durchreichen muss.
+
+Geplante Fuel-Anzeige ueber Servo:
+
+- Die bisherige Fuel-Anzeige im UI soll durch einen Servo ersetzt werden.
+- GameManager bleibt die Quelle fuer den Fuel-Wert.
+- Unity muss den aktuellen Fuel-Wert an den Arduino senden.
+- Der Arduino mapped den Fuel-Wert auf den Servo-Winkel:
+    - voll = Servo rechts / waagerecht
+    - leer = Servo links / 180 Grad gegenueber
+- Beispiel-Mapping:
+    - fuelPercent = currentFuel / maxFuel
+    - servoAngle = Mathf.Lerp(180f, 0f, fuelPercent)
+- Damit steht der Servo bei vollem Tank auf 0 Grad und bei leerem Tank auf 180 Grad.
+
+
+Was noch nicht drin ist:
+
+- keine Port-Erkennung oder Datenpaket-Parser
+
+Kurz gesagt:
+Das Projekt mappt Arduino-Inputs ueber ArduinoActionMapper auf Heli-Steuerung und gibt Fuel als Servo-Winkel an den Arduino aus.

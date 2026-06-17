@@ -572,6 +572,38 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: fullFuelAngle
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: emptyFuelAngle
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: testServoSweep
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: logSerialStatus
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: logReceivedLines
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: helicopterController
+      value: 
+      objectReference: {fileID: 1910126361}
+    - target: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: joystickDigitalThreshold
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: sendServoOnlyWhenAngleChanges
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 8091293952862254570, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
       propertyPath: m_Name
       value: All Managers
@@ -579,7 +611,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8091293952862254570, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1812980474}
   m_SourcePrefab: {fileID: 100100000, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
 --- !u!4 &1113024467 stripped
 Transform:
@@ -912,6 +947,30 @@ PrefabInstance:
       propertyPath: gameManager
       value: 
       objectReference: {fileID: 1022987134}
+    - target: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+      propertyPath: tiltSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+      propertyPath: maxTiltAngle
+      value: 30
+      objectReference: {fileID: 0}
+    - target: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+      propertyPath: inputSourceMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+      propertyPath: maxVerticalSpeed
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+      propertyPath: maxHorizontalSpeed
+      value: 4
+      objectReference: {fileID: 0}
+    - target: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+      propertyPath: horizontalAcceleration
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 1946153033089108527, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
       propertyPath: m_LocalPosition.x
       value: -20
@@ -1254,6 +1313,42 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7332702019688037084, guid: 6d03cf091cea34b4eb7ed3b11c3b10b5, type: 3}
   m_PrefabInstance: {fileID: 258357222734913649}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1812980471 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8091293952862254570, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+  m_PrefabInstance: {fileID: 1072403672}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1812980473 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 5561382246186336965, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+  m_PrefabInstance: {fileID: 1072403672}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812980471}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e61578227f1e42f18ae75daa9ce4122e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArduinoActionMapper
+--- !u!114 &1812980474
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1812980471}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42c67ebc988c4822851b9db63c83d2c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArduinoInputDebugLogger
+  actionMapper: {fileID: 1812980473}
+  helicopterController: {fileID: 1910126361}
+  logInterval: 0.25
+  logRawInput: 0
+  logMappedInput: 0
+  logServoOutput: 0
+  logSerialStatus: 0
+  logReceivedLines: 0
 --- !u!4 &1835252383 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 530977201888798028, guid: 49f7a593fa1d944499e4ee95af4a03cf, type: 3}
@@ -1264,6 +1359,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 1946153033089108527, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
   m_PrefabInstance: {fileID: 1468642948}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1910126361 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+  m_PrefabInstance: {fileID: 1468642948}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81552a3e5d8d82545a76a869647b5cae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HelicopterController
 --- !u!4 &2008218087 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 7332702019688037084, guid: 6d03cf091cea34b4eb7ed3b11c3b10b5, type: 3}

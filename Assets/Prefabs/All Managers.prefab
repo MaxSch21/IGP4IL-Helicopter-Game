@@ -51,6 +51,7 @@ MonoBehaviour:
   requiredPackages: 3
   startDelay: 0.5
   deliveryCooldown: 1
+  estimatedTimeSeconds: 60
   maxFuel: 100
   fuelConsumptionRate: 2
   maxHeliCondition: 4
@@ -65,6 +66,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2607846625095593883}
+  - component: {fileID: 5561382246186336965}
   m_Layer: 0
   m_Name: All Managers
   m_TagString: Untagged
@@ -89,6 +91,29 @@ Transform:
   - {fileID: 1903069840982159762}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5561382246186336965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8091293952862254570}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e61578227f1e42f18ae75daa9ce4122e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ArduinoActionMapper
+  helicopterController: {fileID: 0}
+  gameManager: {fileID: 511706304239706256}
+  portName: COM6
+  baudRate: 9600
+  joystickCenterValue: 512
+  joystickMaxOffset: 512
+  potentiometerRange: 100
+  invertJoystick: 0
+  invertPotentiometer: 0
+  fullFuelAngle: 0
+  emptyFuelAngle: 180
 --- !u!1 &9199664241821945604
 GameObject:
   m_ObjectHideFlags: 0

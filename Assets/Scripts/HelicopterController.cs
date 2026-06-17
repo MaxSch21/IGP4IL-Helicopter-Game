@@ -42,6 +42,7 @@ public class HelicopterController : MonoBehaviour
     [Header("Input")]
     [SerializeField] private InputSourceMode inputSourceMode = InputSourceMode.KeyboardOnly;
     [SerializeField, Range(0f, 1f)] private float externalInputDeadzone = 0.08f;
+    [SerializeField] private bool invertVisualTilt = true;
 
     private Rigidbody2D rb;
     private float currentHorizontalInput;
@@ -51,6 +52,7 @@ public class HelicopterController : MonoBehaviour
     private bool crashMode;
 
     public float CurrentVerticalSpeed => currentVerticalSpeed;
+    public float CurrentHorizontalInput => currentHorizontalInput;
 
     void Awake()
     {
@@ -186,7 +188,8 @@ public class HelicopterController : MonoBehaviour
 
     private void UpdateVisualTilt()
     {
-        float targetTiltAngle = -currentHorizontalInput * maxTiltAngle;
+        float tiltDirection = invertVisualTilt ? -1f : 1f;
+        float targetTiltAngle = currentHorizontalInput * maxTiltAngle * tiltDirection;
         float currentZ = transform.eulerAngles.z;
 
         if (currentZ > 180f)
