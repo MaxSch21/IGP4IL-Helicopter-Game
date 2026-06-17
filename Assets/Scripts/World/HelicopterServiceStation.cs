@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-[RequireComponent(typeof(Collider2D))]
+[RequireComponent(typeof(Collider2D), typeof(AudioSource))]
 public class HelicopterServiceStation : MonoBehaviour
 {
     public enum ServiceType
@@ -16,8 +16,21 @@ public class HelicopterServiceStation : MonoBehaviour
     [SerializeField, Min(1)] private int repairPerTick = 1;
     [SerializeField] private ParticleSystem serviceEffect;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip[] serviceClips;
+    [SerializeField, Range(0.5f, 2f)] private float minPitch = 0.9f;
+    [SerializeField, Range(0.5f, 2f)] private float maxPitch = 1.15f;
+
     private HelicopterController currentHelicopter;
     private Coroutine serviceRoutine;
+    private Coroutine audioRoutine;
+
+    private void Awake()
+    {
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
+    }
 
     private void Reset()
     {
@@ -44,6 +57,7 @@ public class HelicopterServiceStation : MonoBehaviour
         currentHelicopter = null;
         StopServiceRoutine();
         StopServiceEffect();
+        StopServiceAudio();
     }
 
     private void OnDisable()
@@ -51,6 +65,7 @@ public class HelicopterServiceStation : MonoBehaviour
         currentHelicopter = null;
         StopServiceRoutine();
         StopServiceEffect();
+        StopServiceAudio();
     }
 
     private void StartServiceRoutine()
@@ -85,6 +100,7 @@ public class HelicopterServiceStation : MonoBehaviour
         if (!CanService(gameManager))
         {
             StopServiceEffect();
+            StopServiceAudio();
             return;
         }
 
@@ -93,12 +109,14 @@ public class HelicopterServiceStation : MonoBehaviour
             float fuelBefore = gameManager.CurrentFuel;
             gameManager.AddFuel(fuelPerTick);
             UpdateServiceEffect(gameManager.CurrentFuel > fuelBefore);
+            UpdateServiceAudio(gameManager.CurrentFuel > fuelBefore);
             return;
         }
 
         int conditionBefore = gameManager.CurrentHeliCondition;
         gameManager.RepairHelicopter(repairPerTick);
         UpdateServiceEffect(gameManager.CurrentHeliCondition > conditionBefore);
+        UpdateServiceAudio(gameManager.CurrentHeliCondition > conditionBefore);
     }
 
     private bool CanService(GameManager gameManager)
@@ -134,5 +152,57 @@ public class HelicopterServiceStation : MonoBehaviour
             return;
 
         serviceEffect.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+    }
+
+    private void UpdateServiceAudio(bool isActivelyServicing)
+    {
+        if (isActivelyServicing)
+        {
+            StartServiceAudio();
+            return;
+        }
+
+        StopServiceAudio();
+    }
+
+    private void StartServiceAudio()
+    {
+        if (audioRoutine != null || audioSource == null || serviceClips == null || serviceClips.Length == 0)
+            return;
+
+        audioRoutine = StartCoroutine(ServiceAudioLoop());
+    }
+
+    private void StopServiceAudio()
+    {
+        if (audioRoutine != null)
+        {
+            StopCoroutine(audioRoutine);
+            audioRoutine = null;
+        }
+
+        if (audioSource != null)
+            audioSource.Stop();
+    }
+
+    private IEnumerator ServiceAudioLoop()
+    {
+        while (true)
+        {
+            AudioClip clip = serviceClips[Random.Range(0, serviceClips.Length)];
+            if (clip == null)
+            {
+                yield return null;
+                continue;
+            }
+
+            float pitch = Random.Range(minPitch, maxPitch);
+            audioSource.pitch = pitch;
+            audioSource.clip = clip;
+            audioSource.loop = false;
+            audioSource.Play();
+
+            yield return new WaitForSeconds(clip.length / Mathf.Max(0.01f, pitch));
+        }
     }
 }

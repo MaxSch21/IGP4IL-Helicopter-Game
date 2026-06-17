@@ -14,6 +14,10 @@ public class CloudLightningToggle : MonoBehaviour
     [SerializeField, Min(0.01f)] private float lightningDelay = 0.1f;
 	[SerializeField, Min(0.01f)] private float preLightningDelay = 0.5f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioClip lightningClip;
+
     private Vector3 originalScale;
     private SpriteRenderer preTargetSpriteRenderer;
     private Graphic preTargetGraphic;
@@ -27,6 +31,9 @@ public class CloudLightningToggle : MonoBehaviour
             return;
 
         originalScale = targetObject.transform.localScale;
+
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
 
         CachePreTargetColor();
 
@@ -58,6 +65,7 @@ public class CloudLightningToggle : MonoBehaviour
         {
             yield return new WaitForSeconds(startDelay);
             yield return AnimatePreTargetTint(true, preLightningDelay);
+            PlayLightningSound();
             yield return Flash(true, false);
             yield return Flash(false, false);
             yield return Flash(true, true);
@@ -177,5 +185,11 @@ public class CloudLightningToggle : MonoBehaviour
     private void ResetPreTargetColor()
     {
         SetPreTargetTint(false);
+    }
+
+    private void PlayLightningSound()
+    {
+        if (audioSource != null && lightningClip != null)
+            audioSource.PlayOneShot(lightningClip);
     }
 }

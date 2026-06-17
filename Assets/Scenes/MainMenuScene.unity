@@ -286,7 +286,6 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 816719543}
-  - {fileID: 1533791582}
   - {fileID: 2001930042}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -380,16 +379,6 @@ MonoBehaviour:
   m_PointerBehavior: 0
   m_CursorLockBehavior: 0
   m_ScrollDeltaPerTick: 6
---- !u!1 &1263430411 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3133414604531874411, guid: 73248e34d1bbc0747909c5d0d4fc8595, type: 3}
-  m_PrefabInstance: {fileID: 1492561128}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1346964611 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 3994527070089302888, guid: 73248e34d1bbc0747909c5d0d4fc8595, type: 3}
-  m_PrefabInstance: {fileID: 1492561128}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1492561128
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -615,6 +604,7 @@ MonoBehaviour:
   requiredPackages: 3
   startDelay: 0.5
   deliveryCooldown: 1
+  estimatedTimeSeconds: 60
   maxFuel: 100
   fuelConsumptionRate: 5
   maxHeliCondition: 4

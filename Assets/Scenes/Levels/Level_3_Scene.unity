@@ -957,7 +957,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
       propertyPath: inputSourceMode
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
       propertyPath: maxVerticalSpeed
@@ -1011,6 +1011,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3554828396519840632, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 4944103886554370920, guid: ffe989ee3769e8644875c7c7f3b74df8, type: 2}
     - target: {fileID: 4083793479100737148, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
       propertyPath: m_Name
       value: Proto_Player

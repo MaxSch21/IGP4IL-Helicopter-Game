@@ -76,9 +76,25 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 109039164264234975, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
+      propertyPath: audioSource
+      value: 
+      objectReference: {fileID: 6419100300183951595}
+    - target: {fileID: 109039164264234975, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
       propertyPath: serviceEffect
       value: 
       objectReference: {fileID: 1395297830984753214}
+    - target: {fileID: 109039164264234975, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
+      propertyPath: serviceClips.Array.size
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 109039164264234975, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
+      propertyPath: 'serviceClips.Array.data[0]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 3356caa88d2947947a143ee538a28f1b, type: 3}
+    - target: {fileID: 109039164264234975, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
+      propertyPath: 'serviceClips.Array.data[1]'
+      value: 
+      objectReference: {fileID: 8300000, guid: 6dac692e86f9b3b4294a682e850419ef, type: 3}
     - target: {fileID: 1402650696380450165, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
       propertyPath: m_Name
       value: Fuel_Station Variant
@@ -135,6 +151,11 @@ PrefabInstance:
       addedObject: {fileID: 8466705210177573123}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
+--- !u!82 &6419100300183951595 stripped
+AudioSource:
+  m_CorrespondingSourceObject: {fileID: 1552282426156126270, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
+  m_PrefabInstance: {fileID: 5521387935859951829}
+  m_PrefabAsset: {fileID: 0}
 --- !u!4 &6446791477687349408 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1578638816407631989, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}

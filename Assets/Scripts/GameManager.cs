@@ -64,8 +64,10 @@ public class GameManager : MonoBehaviour
     public event Action<float, float> OnFuelChanged;
     public event Action OnGameOver;
     public event Action OnWin;
+    public event Action OnPackagePickedUp;
     public event Action<GameState> OnStateChanged;
     public event Action<int, int> OnHeliConditionChanged;
+    public event Action OnHeliDestroyed;
 
     public GameState CurrentState => currentState;
     public bool HasPackage => hasPackage;
@@ -293,6 +295,7 @@ public class GameManager : MonoBehaviour
             Destroy(packageObject);
 
         Debug.Log("GameManager: Package picked up");
+        OnPackagePickedUp?.Invoke();
         SetState(GameState.Package);
     }
 
@@ -396,6 +399,7 @@ public class GameManager : MonoBehaviour
 
     public void TakeRotorHit()
     {
+        OnHeliDestroyed?.Invoke();
         TriggerGameOver("Rotor hit");
     }
 
@@ -412,6 +416,7 @@ public class GameManager : MonoBehaviour
 
         if (heliCondition <= 0)
         {
+            OnHeliDestroyed?.Invoke();
             TriggerGameOver("Body destroyed");
             return;
         }

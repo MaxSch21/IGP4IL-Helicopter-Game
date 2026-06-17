@@ -699,6 +699,7 @@ MonoBehaviour:
   crashGravityScale: 25
   inputSourceMode: 0
   externalInputDeadzone: 0.08
+  invertVisualTilt: 1
 --- !u!114 &6869023360227977513
 MonoBehaviour:
   m_ObjectHideFlags: 0
