@@ -1,0 +1,455 @@
+fileFormatVersion: 2
+guid: efa845b533058b74b9b042a9b6a734d2
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -5173047818788785271
+    second: Helicopter_damage3_0
+  - first:
+      213: -4793760329223683880
+    second: Helicopter_damage3_1
+  - first:
+      213: -3789174839851761383
+    second: Helicopter_damage3_2
+  - first:
+      213: 5199262852906683502
+    second: Helicopter_damage3_3
+  - first:
+      213: -6845860685207034188
+    second: Helicopter_damage3_4
+  - first:
+      213: 408540446895714872
+    second: Helicopter_damage3_5
+  - first:
+      213: 912552566728650152
+    second: Helicopter_damage3_6
+  - first:
+      213: 207222845943368479
+    second: Helicopter_damage3_7
+  - first:
+      213: 7928526277334313484
+    second: Helicopter_damage3_8
+  - first:
+      213: -4776334795345190444
+    second: Helicopter_damage3_9
+  - first:
+      213: 5553652660634818565
+    second: Helicopter_damage3_10
+  - first:
+      213: 6044772572903266846
+    second: Helicopter_damage3_11
+  - first:
+      213: 5984870291684688017
+    second: Helicopter_damage3_12
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Helicopter_damage3_0
+      rect:
+        serializedVersion: 2
+        x: 91
+        y: 287
+        width: 55
+        height: 66
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9833cf2ba64a538b0800000000000000
+      internalID: -5173047818788785271
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_1
+      rect:
+        serializedVersion: 2
+        x: 417
+        y: 334
+        width: 19
+        height: 7
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d043460164297db0800000000000000
+      internalID: -4793760329223683880
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_2
+      rect:
+        serializedVersion: 2
+        x: 442
+        y: 333
+        width: 26
+        height: 8
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 911c9ce1f852a6bc0800000000000000
+      internalID: -3789174839851761383
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_3
+      rect:
+        serializedVersion: 2
+        x: 467
+        y: 326
+        width: 57
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e6c0361940e772840800000000000000
+      internalID: 5199262852906683502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_4
+      rect:
+        serializedVersion: 2
+        x: 220
+        y: 260
+        width: 69
+        height: 27
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4b62c6c4afd9ef0a0800000000000000
+      internalID: -6845860685207034188
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_5
+      rect:
+        serializedVersion: 2
+        x: 279
+        y: 238
+        width: 39
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 83239953f5d6ba500800000000000000
+      internalID: 408540446895714872
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_6
+      rect:
+        serializedVersion: 2
+        x: 317
+        y: 252
+        width: 41
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8ad6bba79b90aac00800000000000000
+      internalID: 912552566728650152
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_7
+      rect:
+        serializedVersion: 2
+        x: 433
+        y: 233
+        width: 29
+        height: 38
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f1bccc9941430e200800000000000000
+      internalID: 207222845943368479
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_8
+      rect:
+        serializedVersion: 2
+        x: 492
+        y: 212
+        width: 82
+        height: 65
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c0aacd064a8c70e60800000000000000
+      internalID: 7928526277334313484
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_9
+      rect:
+        serializedVersion: 2
+        x: 378
+        y: 146
+        width: 95
+        height: 106
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d1ac1b4fcc07bdb0800000000000000
+      internalID: -4776334795345190444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_10
+      rect:
+        serializedVersion: 2
+        x: 502
+        y: 140
+        width: 119
+        height: 101
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5089a0b9ba9821d40800000000000000
+      internalID: 5553652660634818565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_11
+      rect:
+        serializedVersion: 2
+        x: 573
+        y: 204
+        width: 31
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e1a5ce3e0a853e350800000000000000
+      internalID: 6044772572903266846
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Helicopter_damage3_12
+      rect:
+        serializedVersion: 2
+        x: 498
+        y: 159
+        width: 6
+        height: 17
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 19087a232d78e0350800000000000000
+      internalID: 5984870291684688017
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Helicopter_damage3_0: -5173047818788785271
+      Helicopter_damage3_1: -4793760329223683880
+      Helicopter_damage3_10: 5553652660634818565
+      Helicopter_damage3_11: 6044772572903266846
+      Helicopter_damage3_12: 5984870291684688017
+      Helicopter_damage3_2: -3789174839851761383
+      Helicopter_damage3_3: 5199262852906683502
+      Helicopter_damage3_4: -6845860685207034188
+      Helicopter_damage3_5: 408540446895714872
+      Helicopter_damage3_6: 912552566728650152
+      Helicopter_damage3_7: 207222845943368479
+      Helicopter_damage3_8: 7928526277334313484
+      Helicopter_damage3_9: -4776334795345190444
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
