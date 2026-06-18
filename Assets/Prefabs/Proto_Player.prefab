@@ -744,6 +744,7 @@ MonoBehaviour:
   gravityScale: 1
   crashGravityScale: 25
   inputSourceMode: 0
+  allowKeyboardInputWithExternal: 1
   externalInputDeadzone: 0.08
   invertVisualTilt: 1
 --- !u!114 &6869023360227977513

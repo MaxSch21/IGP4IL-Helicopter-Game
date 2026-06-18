@@ -159,11 +159,11 @@ MonoBehaviour:
   crateDeliveredClip: {fileID: 8300000, guid: 23f4906b8d60ffd4ea4953e48ae3de5b, type: 3}
   ambientClip: {fileID: 8300000, guid: d27d93bbdc07e9941a58b34cc9630c5f, type: 3}
   helicopterClip: {fileID: 8300000, guid: 4e8fbfb69f724ab4d90aa9b2818faa02, type: 3}
-  lowFuelClip: {fileID: 8300000, guid: 23ea1da7b108e694eb25ca542ad83449, type: 3}
+  lowFuelClip: {fileID: 8300000, guid: 5f015ff1681b7da43bd4e0537d3e746a, type: 3}
   fallClip: {fileID: 8300000, guid: 5740c59ba197c014fbc761259cfcd856, type: 3}
   helicopterController: {fileID: 0}
-  minHelicopterPitch: 1
-  maxHelicopterPitch: 1.5
+  minHelicopterPitch: 1.8
+  maxHelicopterPitch: 2
   speedPitchAmount: 0.05
   pitchUpdateInterval: 0.2
   lowFuelThreshold: 0.2

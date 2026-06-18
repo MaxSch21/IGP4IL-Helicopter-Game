@@ -41,12 +41,17 @@ public class HelicopterController : MonoBehaviour
 
     [Header("Input")]
     [SerializeField] private InputSourceMode inputSourceMode = InputSourceMode.KeyboardOnly;
+    [SerializeField] private bool allowKeyboardInputWithExternal = true;
     [SerializeField, Range(0f, 1f)] private float externalInputDeadzone = 0.08f;
     [SerializeField] private bool invertVisualTilt = true;
 
     private Rigidbody2D rb;
     private float currentHorizontalInput;
     private float currentVerticalSpeed;
+    private float keyboardHorizontalInput;
+    private float keyboardVerticalSpeed;
+    private float externalHorizontalInput;
+    private float externalVerticalSpeed;
     private bool inputEnabled = true;
     private float baseGravityScale;
     private bool crashMode;
@@ -66,11 +71,13 @@ public class HelicopterController : MonoBehaviour
     {
         if (inputEnabled)
         {
-            if (inputSourceMode == InputSourceMode.KeyboardOnly)
+            if (inputSourceMode == InputSourceMode.KeyboardOnly || allowKeyboardInputWithExternal)
             {
                 HandleKeyboardHorizontalInput();
                 HandleKeyboardVerticalInput();
             }
+
+            UpdateCurrentInput();
         }
 
         UpdateVisualTilt();
@@ -86,7 +93,8 @@ public class HelicopterController : MonoBehaviour
         if (!inputEnabled)
             return;
 
-        currentHorizontalInput = ApplyDeadzoneAndClamp(joystickX);
+        externalHorizontalInput = ApplyDeadzoneAndClamp(joystickX);
+        UpdateCurrentInput();
     }
 
     public void SetVerticalSpeedFromArduino(float mappedPotValue)
@@ -94,7 +102,8 @@ public class HelicopterController : MonoBehaviour
         if (!inputEnabled)
             return;
 
-        currentVerticalSpeed = Mathf.Clamp(mappedPotValue, -maxVerticalSpeed, maxVerticalSpeed);
+        externalVerticalSpeed = Mathf.Clamp(mappedPotValue, -maxVerticalSpeed, maxVerticalSpeed);
+        UpdateCurrentInput();
     }
 
     public void SetExternalInput(float horizontalInput, float verticalSpeed)
@@ -110,7 +119,8 @@ public class HelicopterController : MonoBehaviour
         if (mode == InputSourceMode.KeyboardOnly)
             return;
 
-        currentHorizontalInput = ApplyDeadzoneAndClamp(currentHorizontalInput);
+        externalHorizontalInput = ApplyDeadzoneAndClamp(externalHorizontalInput);
+        UpdateCurrentInput();
     }
 
     public void SetInputEnabled(bool enabled)
@@ -122,6 +132,10 @@ public class HelicopterController : MonoBehaviour
 
         currentHorizontalInput = 0f;
         currentVerticalSpeed = 0f;
+        keyboardHorizontalInput = 0f;
+        keyboardVerticalSpeed = 0f;
+        externalHorizontalInput = 0f;
+        externalVerticalSpeed = 0f;
 
         if (rb != null && !crashMode)
             rb.linearVelocity = Vector2.zero;
@@ -139,27 +153,40 @@ public class HelicopterController : MonoBehaviour
 
     private void HandleKeyboardHorizontalInput()
     {
-        currentHorizontalInput = 0f;
+        keyboardHorizontalInput = 0f;
 
         if (Input.GetKey(KeyCode.A))
-            currentHorizontalInput = -1f;
+            keyboardHorizontalInput = -1f;
         else if (Input.GetKey(KeyCode.D))
-            currentHorizontalInput = 1f;
+            keyboardHorizontalInput = 1f;
     }
 
     private void HandleKeyboardVerticalInput()
     {
         if (Input.GetKeyDown(KeyCode.UpArrow))
-            currentVerticalSpeed += verticalSpeedStep;
+            keyboardVerticalSpeed += verticalSpeedStep;
 
         if (Input.GetKeyDown(KeyCode.DownArrow))
-            currentVerticalSpeed -= verticalSpeedStep;
+            keyboardVerticalSpeed -= verticalSpeedStep;
 
-        currentVerticalSpeed = Mathf.Clamp(currentVerticalSpeed, -maxVerticalSpeed, maxVerticalSpeed);
+        keyboardVerticalSpeed = Mathf.Clamp(keyboardVerticalSpeed, -maxVerticalSpeed, maxVerticalSpeed);
 
         bool verticalKeyHeld = Input.GetKey(KeyCode.UpArrow) || Input.GetKey(KeyCode.DownArrow);
         if (!verticalKeyHeld)
-            currentVerticalSpeed = Mathf.MoveTowards(currentVerticalSpeed, 0f, verticalDamping * Time.deltaTime);
+            keyboardVerticalSpeed = Mathf.MoveTowards(keyboardVerticalSpeed, 0f, verticalDamping * Time.deltaTime);
+    }
+
+    private void UpdateCurrentInput()
+    {
+        if (inputSourceMode == InputSourceMode.KeyboardOnly)
+        {
+            currentHorizontalInput = keyboardHorizontalInput;
+            currentVerticalSpeed = keyboardVerticalSpeed;
+            return;
+        }
+
+        currentHorizontalInput = keyboardHorizontalInput != 0f ? keyboardHorizontalInput : externalHorizontalInput;
+        currentVerticalSpeed = Mathf.Clamp(externalVerticalSpeed + keyboardVerticalSpeed, -maxVerticalSpeed, maxVerticalSpeed);
     }
 
     private void ApplyMovement()
