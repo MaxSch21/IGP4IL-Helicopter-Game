@@ -9,6 +9,5 @@ public class WinState : State
 
     public override void Enter()
     {
-        Debug.Log("You Win");
     }
 }

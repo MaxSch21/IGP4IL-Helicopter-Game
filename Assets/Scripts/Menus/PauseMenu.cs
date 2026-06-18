@@ -53,7 +53,6 @@ public class
 
         if (string.IsNullOrWhiteSpace(mainMenuSceneName))
         {
-            Debug.LogWarning("PauseMenu: Main menu scene name is not configured.");
             return;
         }
 

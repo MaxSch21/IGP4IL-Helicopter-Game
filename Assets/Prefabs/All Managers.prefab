@@ -42,7 +42,7 @@ AudioSource:
   m_GameObject: {fileID: 1469972910883868756}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 24300002, guid: ffe989ee3769e8644875c7c7f3b74df8, type: 2}
+  OutputAudioMixerGroup: {fileID: -5001786743423549166, guid: ffe989ee3769e8644875c7c7f3b74df8, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
@@ -147,6 +147,7 @@ MonoBehaviour:
   helicopterSource: {fileID: 5634198326167695178}
   lowFuelSource: {fileID: 2551802581589848799}
   fallSource: {fileID: 678476895141196364}
+  audioMixer: {fileID: 24100000, guid: ffe989ee3769e8644875c7c7f3b74df8, type: 2}
   winClip: {fileID: 8300000, guid: f61b89e27c23e1f489acdf5f34d473de, type: 3}
   gameOverClip: {fileID: 8300000, guid: f781c3e7d6287784a9fd0165ca1875c9, type: 3}
   heliCrashClips:
@@ -349,6 +350,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2607846625095593883}
     m_Modifications:
+    - target: {fileID: 790815835276134988, guid: 5eb1bf048b220634096c9b5ba9895851, type: 3}
+      propertyPath: m_Volume
+      value: 0.3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1693436497144431860, guid: 5eb1bf048b220634096c9b5ba9895851, type: 3}
+      propertyPath: m_Volume
+      value: 0.45
+      objectReference: {fileID: 0}
     - target: {fileID: 5558286981045358924, guid: 5eb1bf048b220634096c9b5ba9895851, type: 3}
       propertyPath: m_LocalPosition.x
       value: -673.8777

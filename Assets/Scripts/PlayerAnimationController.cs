@@ -67,7 +67,6 @@ public class PlayerAnimationController : MonoBehaviour
             return;
         }
 
-        Debug.LogWarning($"PlayerAnimationController: Animator is missing trigger '{deathTriggerName}'.");
     }
 
     private bool HasTriggerParameter(string parameterName)

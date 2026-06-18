@@ -137,7 +137,6 @@ public class UIManager : MonoBehaviour
 
     public void OnGameStart(int maxPackages)
     {
-        Debug.Log($"UIManager: Game started, required packages: {maxPackages}");
         StopGameOverRoutine();
         StopWinStarRoutine();
         SetGameplayPaused(false);
@@ -149,7 +148,6 @@ public class UIManager : MonoBehaviour
 
     public void OnPackageDelivered(int current, int max)
     {
-        Debug.Log($"UIManager: Package delivered ({current}/{max})");
         SetDeliveryText($"{current}/{max}");
     }
 
@@ -166,13 +164,11 @@ public class UIManager : MonoBehaviour
 
     public void OnGameOver()
     {
-        Debug.Log("UIManager: Game over");
         StartGameOverRoutine();
     }
 
     public void OnWin()
     {
-        Debug.Log("UIManager: Win");
         StopGameOverRoutine();
         StopWinStarRoutine();
         SetGameplayPaused(false);
@@ -187,18 +183,14 @@ public class UIManager : MonoBehaviour
 
     public void OnNextLevelClicked()
     {
-        Debug.Log("UIManager: Next level clicked");
         SetGameplayPaused(false);
 
         if (GameManager.Instance != null)
             GameManager.Instance.LoadNextLevel();
-        else
-            Debug.LogWarning("UIManager: No GameManager available for next level load.");
     }
 
     public void OnHeliConditionChanged(int current, int max)
     {
-        Debug.Log($"Heli Condition: {current}/{max}");
     }
 
     public void OnTemporaryScoreChanged(int score)

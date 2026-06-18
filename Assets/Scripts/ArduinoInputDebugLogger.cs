@@ -8,7 +8,6 @@ public class ArduinoInputDebugLogger : MonoBehaviour
     [SerializeField] private bool logRawInput = true;
     [SerializeField] private bool logMappedInput = true;
     [SerializeField] private bool logServoOutput = true;
-    [SerializeField] private bool logSerialStatus = true;
     [SerializeField] private bool logReceivedLines;
 
     private int lastJoystickRaw;
@@ -75,8 +74,6 @@ public class ArduinoInputDebugLogger : MonoBehaviour
         if (logServoOutput && hasServoOutput)
             message += $" | fuelServo={lastServoAngle}deg";
 
-        if (message != "Arduino")
-            Debug.Log(message);
     }
 
     private void HandleRawInput(int joystickRaw, float potentiometerValue)
@@ -101,13 +98,9 @@ public class ArduinoInputDebugLogger : MonoBehaviour
 
     private void HandleSerialStatusChanged(string status)
     {
-        if (logSerialStatus)
-            Debug.Log($"Arduino serial: {status}");
     }
 
     private void HandleSerialLineReceived(string line)
     {
-        if (logReceivedLines)
-            Debug.Log($"Arduino RX: {line}");
     }
 }

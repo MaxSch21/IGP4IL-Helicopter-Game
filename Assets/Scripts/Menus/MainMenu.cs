@@ -29,9 +29,6 @@ public class MainMenu : MonoBehaviour
 
     void Start()
     {
-        if (EventSystem.current == null)
-            Debug.LogWarning("MainMenu: No EventSystem found in this scene. UI clicks will not work.");
-
         ShowMainMenu();
         RefreshLevelButtons();
     }
@@ -43,50 +40,42 @@ public class MainMenu : MonoBehaviour
 
     public void OnPlayClicked()
     {
-        Debug.Log("MainMenu: Play clicked");
         LoadFirstPlayableLevel();
     }
 
     public void OnLevelSelectionClicked()
     {
-        Debug.Log("MainMenu: Level selection clicked");
         ShowLevelSelect();
     }
 
     public void OnBackClicked()
     {
-        Debug.Log("MainMenu: Back clicked");
         ShowMainMenu();
     }
 
     public void OnSettingsClicked()
     {
-        Debug.Log("MainMenu: Settings clicked");
         ShowSettings();
     }
 
     public void OnSettingsBackClicked()
     {
-        Debug.Log("MainMenu: Settings back clicked");
         ShowMainMenu();
     }
 
     public void OnQuitClicked()
     {
-        Debug.Log("MainMenu: Quit clicked");
         Application.Quit();
     }
 
     public void OnLevelClicked(int levelIndex)
     {
-        Debug.Log($"MainMenu: Level clicked {levelIndex}");
         LevelData level = levels.Find(candidate => candidate != null && candidate.levelIndex == levelIndex);
         LoadLevel(level);
     }
 
     public void OnLevelClicked(LevelData level)
     {
-        Debug.Log($"MainMenu: Level clicked {level?.levelIndex ?? 0}");
         LoadLevel(level);
     }
 
@@ -204,26 +193,22 @@ public class MainMenu : MonoBehaviour
             return;
         }
 
-        Debug.LogWarning("MainMenu: No playable level configured.");
     }
 
     private void LoadLevel(LevelData level)
     {
         if (level == null || !level.IsConfigured)
         {
-            Debug.LogWarning("MainMenu: Level is not configured.");
             return;
         }
 
         if (!LevelProgress.IsUnlocked(level.levelIndex))
         {
-            Debug.LogWarning($"MainMenu: Level {level.levelIndex} is locked.");
             return;
         }
 
         Time.timeScale = 1f;
         LevelRuntime.Set(level);
-        Debug.Log($"MainMenu: Loading {level.displayName} ({level.sceneName})");
         SceneManager.LoadScene(level.sceneName);
     }
 

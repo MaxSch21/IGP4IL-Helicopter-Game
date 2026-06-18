@@ -157,7 +157,6 @@ public class GameManager : MonoBehaviour
         if (TryLoadNextSceneInBuildSettings())
             return;
 
-        Debug.LogWarning("GameManager: No next level configured.");
     }
 
     private void StartGame()
@@ -182,7 +181,6 @@ public class GameManager : MonoBehaviour
         SetCarriedPackageVisible(false);
         SetPlayerActiveState(true, false);
 
-        Debug.Log($"GameManager: Starting game, required packages: {requiredPackages}");
         SetState(GameState.Start);
         OnGameStart?.Invoke(requiredPackages);
         OnFuelChanged?.Invoke(currentFuel, maxFuel);
@@ -246,7 +244,6 @@ public class GameManager : MonoBehaviour
             return;
 
         currentState = newState;
-        Debug.Log($"GameManager: State changed to {newState}");
         OnStateChanged?.Invoke(newState);
     }
 
@@ -294,7 +291,6 @@ public class GameManager : MonoBehaviour
         if (packageObject != null)
             Destroy(packageObject);
 
-        Debug.Log("GameManager: Package picked up");
         OnPackagePickedUp?.Invoke();
         SetState(GameState.Package);
     }
@@ -308,7 +304,6 @@ public class GameManager : MonoBehaviour
         deliveredPackages++;
         SetCarriedPackageVisible(false);
 
-        Debug.Log($"GameManager: Package delivered ({deliveredPackages}/{requiredPackages})");
         OnPackageDelivered?.Invoke(deliveredPackages, requiredPackages);
         ScoreManager.Instance?.AddPackageScore();
 
@@ -337,8 +332,6 @@ public class GameManager : MonoBehaviour
         currentFuel = Mathf.Min(maxFuel, currentFuel + amount);
         OnFuelChanged?.Invoke(currentFuel, maxFuel);
 
-        if (fuelDepleted && currentState == GameState.FuelDepleted && currentFuel > 0f)
-            Debug.Log($"GameManager: Fuel restored to {currentFuel}/{maxFuel}");
     }
 
     public void RepairHelicopter(int amount = 1)
@@ -411,7 +404,6 @@ public class GameManager : MonoBehaviour
         canTakeDamage = false;
         heliCondition = Mathf.Max(0, heliCondition - 1);
 
-        Debug.Log($"GameManager: Helicopter condition {heliCondition}/{maxHeliCondition}");
         OnHeliConditionChanged?.Invoke(heliCondition, maxHeliCondition);
 
         if (heliCondition <= 0)
@@ -465,7 +457,6 @@ public class GameManager : MonoBehaviour
         StopDamageCooldownRoutine();
         SetPlayerActiveState(false, true);
 
-        Debug.Log("GameManager: Fuel depleted, crash mode enabled");
         SetState(GameState.FuelDepleted);
     }
 
@@ -481,7 +472,6 @@ public class GameManager : MonoBehaviour
         SetCarriedPackageVisible(false);
         SetPlayerActiveState(false, fuelDepleted);
 
-        Debug.Log($"GameManager: Game over ({reason})");
         SetState(GameState.GameOver);
         OnGameOver?.Invoke();
     }
@@ -501,7 +491,6 @@ public class GameManager : MonoBehaviour
         lastLevelResult = BuildLevelResult();
         int earnedStars = StarEvaluator.Evaluate(lastLevelResult);
 
-        Debug.Log("GameManager: Win condition reached");
         SetState(GameState.Win);
         ScoreManager.Instance?.FinalizeScore((int)currentFuel, earnedStars * StarBonusPoints);
         OnWin?.Invoke();

@@ -4912,10 +4912,10 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PauseMenu, Assembly-CSharp
-        m_MethodName: OnFullscreenToggle
-        m_Mode: 6
+      - m_Target: {fileID: 4328127683281429451}
+        m_TargetAssemblyTypeName: SettingsMenuController, Assembly-CSharp
+        m_MethodName: ToggleFullscreen
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -4943,7 +4943,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &5268231663650321065
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5143,10 +5143,10 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PauseMenu, Assembly-CSharp
-        m_MethodName: OnMuteSfxToggle
-        m_Mode: 6
+      - m_Target: {fileID: 4328127683281429451}
+        m_TargetAssemblyTypeName: SettingsMenuController, Assembly-CSharp
+        m_MethodName: ToggleSfxMuted
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
@@ -5507,6 +5507,7 @@ GameObject:
   - component: {fileID: 8109357955161692441}
   - component: {fileID: 3814960375587274116}
   - component: {fileID: 443539938151016298}
+  - component: {fileID: 4328127683281429451}
   m_Layer: 0
   m_Name: UI Canvas
   m_TagString: Untagged
@@ -5615,7 +5616,7 @@ AudioSource:
   m_GameObject: {fileID: 6557546711942760871}
   m_Enabled: 1
   serializedVersion: 4
-  OutputAudioMixerGroup: {fileID: 0}
+  OutputAudioMixerGroup: {fileID: 4944103886554370920, guid: ffe989ee3769e8644875c7c7f3b74df8, type: 2}
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 0}
   m_PlayOnAwake: 1
@@ -5718,6 +5719,22 @@ MonoBehaviour:
   audioSource: {fileID: 3814960375587274116}
   clickClip: {fileID: 8300000, guid: e7f164ea8d7078c4f92d89f7810c776d, type: 3}
   includeInactiveButtons: 1
+--- !u!114 &4328127683281429451
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6557546711942760871}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a9f2c6b5d1746d4a8f71d2e4b0c9a13, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SettingsMenuController
+  audioMixer: {fileID: 24100000, guid: ffe989ee3769e8644875c7c7f3b74df8, type: 2}
+  musicToggle: {fileID: 1852686171158232380}
+  sfxToggle: {fileID: 6389182310294364252}
+  fullscreenToggle: {fileID: 8029433737822517099}
 --- !u!1 &6563533572615580147
 GameObject:
   m_ObjectHideFlags: 0
@@ -6444,10 +6461,10 @@ MonoBehaviour:
   onValueChanged:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
-        m_TargetAssemblyTypeName: PauseMenu, Assembly-CSharp
-        m_MethodName: OnMuteMusicToggle
-        m_Mode: 6
+      - m_Target: {fileID: 4328127683281429451}
+        m_TargetAssemblyTypeName: SettingsMenuController, Assembly-CSharp
+        m_MethodName: ToggleMusicMuted
+        m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
           m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine

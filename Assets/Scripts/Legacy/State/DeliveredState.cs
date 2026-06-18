@@ -12,7 +12,6 @@ public class DeliveredState : State
 
     public override void Enter()
     {
-        Debug.Log("Package delivered");
         transitionCoroutine = machine.StartCoroutine(TransitionAfterDelay());
     }
 

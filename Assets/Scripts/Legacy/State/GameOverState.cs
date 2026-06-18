@@ -9,7 +9,6 @@ public class GameOverState : State
 
     public override void Enter()
     {
-        Debug.Log("Game Over");
         machine.character?.SetInputEnabled(false);
     }
 }

@@ -345,6 +345,10 @@ PrefabInstance:
       propertyPath: nextLevelSceneName
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 511706304239706256, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: estimatedTimeSeconds
+      value: 70
+      objectReference: {fileID: 0}
     - target: {fileID: 2607846625095593883, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -384,6 +388,18 @@ PrefabInstance:
     - target: {fileID: 2607846625095593883, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3403421571010155469, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: helicopterController
+      value: 
+      objectReference: {fileID: 1859297669}
+    - target: {fileID: 5634198326167695178, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: m_Volume
+      value: 0.25
+      objectReference: {fileID: 0}
+    - target: {fileID: 6001452002822447602, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
+      propertyPath: m_Volume
+      value: 0.35
       objectReference: {fileID: 0}
     - target: {fileID: 8091293952862254570, guid: e27171fb9e159de48b9e3a43faa02395, type: 3}
       propertyPath: m_Name
@@ -809,6 +825,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7332702019688037084, guid: 6d03cf091cea34b4eb7ed3b11c3b10b5, type: 3}
   m_PrefabInstance: {fileID: 6994016569686210741}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1859297669 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1173296678548525320, guid: 8dca41ba93e6948498026a3a70fd4eb4, type: 3}
+  m_PrefabInstance: {fileID: 136803377}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 81552a3e5d8d82545a76a869647b5cae, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HelicopterController
 --- !u!1001 &1919070585
 PrefabInstance:
   m_ObjectHideFlags: 0

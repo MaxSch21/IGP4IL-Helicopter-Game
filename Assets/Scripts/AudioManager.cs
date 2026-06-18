@@ -1,14 +1,25 @@
 using UnityEngine;
+using UnityEngine.Audio;
 
 [RequireComponent(typeof(AudioSource))]
 public class AudioManager : MonoBehaviour
 {
+    private const string MusicMutedKey = "MusicMuted";
+    private const string SfxMutedKey = "SfxMuted";
+    private const string MusicVolumeParameter = "MusicVolume";
+    private const string SfxVolumeParameter = "SfxVolume";
+    private const float MutedVolume = -80f;
+    private const float UnmutedVolume = 0f;
+
     [Header("Sources")]
     [SerializeField] private AudioSource sfxSource;
     [SerializeField] private AudioSource ambientSource;
     [SerializeField] private AudioSource helicopterSource;
     [SerializeField] private AudioSource lowFuelSource;
     [SerializeField] private AudioSource fallSource;
+
+    [Header("Mixer")]
+    [SerializeField] private AudioMixer audioMixer;
 
     [Header("SFX")]
     [SerializeField] private AudioClip winClip;
@@ -49,6 +60,9 @@ public class AudioManager : MonoBehaviour
 
         if (helicopterController == null)
             helicopterController = FindFirstObjectByType<HelicopterController>();
+
+        SettingsMenuController.ApplySessionDefaultsOnce();
+        ApplySavedMixerSettings();
 
         ConfigureLoopSource(ambientSource, ambientClip);
         ConfigureLoopSource(helicopterSource, helicopterClip);
@@ -229,6 +243,41 @@ public class AudioManager : MonoBehaviour
         source.clip = clip;
         source.loop = true;
         source.playOnAwake = false;
+    }
+
+    private void ApplySavedMixerSettings()
+    {
+        AudioMixer mixer = GetAudioMixer();
+        if (mixer == null)
+            return;
+
+        SetMixerVolume(mixer, MusicVolumeParameter, GetBool(MusicMutedKey));
+        SetMixerVolume(mixer, SfxVolumeParameter, GetBool(SfxMutedKey));
+    }
+
+    private AudioMixer GetAudioMixer()
+    {
+        if (audioMixer != null)
+            return audioMixer;
+
+        AudioSource[] sources = { sfxSource, ambientSource, helicopterSource, lowFuelSource, fallSource };
+        foreach (AudioSource source in sources)
+        {
+            if (source != null && source.outputAudioMixerGroup != null)
+                return source.outputAudioMixerGroup.audioMixer;
+        }
+
+        return null;
+    }
+
+    private void SetMixerVolume(AudioMixer mixer, string parameterName, bool muted)
+    {
+        mixer.SetFloat(parameterName, muted ? MutedVolume : UnmutedVolume);
+    }
+
+    private bool GetBool(string key)
+    {
+        return PlayerPrefs.GetInt(key, 0) == 1;
     }
 
     private AudioSource EnsureSource(AudioSource source)

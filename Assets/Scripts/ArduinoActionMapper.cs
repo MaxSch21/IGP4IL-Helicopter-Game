@@ -19,9 +19,6 @@ public class ArduinoActionMapper : MonoBehaviour
     [SerializeField] private int baudRate = 9600;
     [SerializeField, Min(0f)] private float arduinoResetDelay = 2f;
     [SerializeField, Min(1)] private int maxLinesPerFrame = 4;
-    [SerializeField] private bool logSerialStatus = true;
-    [SerializeField] private bool logReceivedLines;
-    [SerializeField] private bool logSentServoCommands = true;
 
     [Header("Input Mapping")]
     [SerializeField] private bool joystickUsesMappedRange = true;
@@ -121,18 +118,14 @@ public class ArduinoActionMapper : MonoBehaviour
             if (!string.IsNullOrWhiteSpace(latestLine))
                 HandleArduinoLine(latestLine);
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            Debug.LogWarning($"ArduinoActionMapper: Input read failed: {exception.Message}");
         }
 #endif
     }
 
     private void HandleArduinoLine(string line)
     {
-        if (logReceivedLines)
-            Debug.Log($"ArduinoActionMapper: RX {line}");
-
         OnSerialLineReceived?.Invoke(line);
 
         if (line.StartsWith("S:", StringComparison.Ordinal))
@@ -141,19 +134,16 @@ public class ArduinoActionMapper : MonoBehaviour
         string[] values = line.Split(',');
         if (values.Length < 2)
         {
-            Debug.LogWarning($"ArduinoActionMapper: Expected joystick,potentiometer but received '{line}'.");
             return;
         }
 
         if (!int.TryParse(values[0], NumberStyles.Integer, CultureInfo.InvariantCulture, out int joystickRaw))
         {
-            Debug.LogWarning($"ArduinoActionMapper: Could not parse joystick value from '{line}'.");
             return;
         }
 
         if (!float.TryParse(values[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float potentiometerValue))
         {
-            Debug.LogWarning($"ArduinoActionMapper: Could not parse potentiometer value from '{line}'.");
             return;
         }
 
@@ -255,9 +245,6 @@ public class ArduinoActionMapper : MonoBehaviour
         serialConnection.WriteLine($"F:{servoAngle}");
         lastSentServoAngle = servoAngle;
 
-        if (logSentServoCommands)
-            Debug.Log($"ArduinoActionMapper: TX F:{servoAngle} {debugContext}");
-
         nextServoUpdateTime = Time.unscaledTime + servoUpdateInterval;
 #endif
     }
@@ -280,9 +267,7 @@ public class ArduinoActionMapper : MonoBehaviour
             LogSerialStatus($"Could not open {portName}: {exception.Message}", true);
         }
 #elif ARDUINO_SERIAL_PORTS
-        Debug.LogWarning("ArduinoActionMapper: Serial is only implemented for Windows in this prototype.");
 #else
-        Debug.LogWarning("ArduinoActionMapper: Serial is disabled. Add ARDUINO_SERIAL_PORTS to Scripting Define Symbols.");
 #endif
     }
 
@@ -316,14 +301,6 @@ public class ArduinoActionMapper : MonoBehaviour
     private void LogSerialStatus(string message, bool warning = false)
     {
         OnSerialStatusChanged?.Invoke(message);
-
-        if (!logSerialStatus)
-            return;
-
-        if (warning)
-            Debug.LogWarning($"ArduinoActionMapper: {message}");
-        else
-            Debug.Log($"ArduinoActionMapper: {message}");
     }
 }
 

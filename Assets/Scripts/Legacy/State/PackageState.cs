@@ -9,6 +9,5 @@ public class PackageState : State
 
     public override void Enter()
     {
-        Debug.Log("Entered Package state.");
     }
 }

@@ -12,7 +12,6 @@ public class StartState : State
 
     public override void Enter()
     {
-        Debug.Log("Game Start");
         transitionCoroutine = machine.StartCoroutine(TransitionToNoPackage());
     }
 

@@ -106,6 +106,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Repair_Station Variant
       objectReference: {fileID: 0}
+    - target: {fileID: 1552282426156126270, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
+      propertyPath: OutputAudioMixerGroup
+      value: 
+      objectReference: {fileID: 4944103886554370920, guid: ffe989ee3769e8644875c7c7f3b74df8, type: 2}
     - target: {fileID: 1578638816407631989, guid: 8af0c6d610e8eb5468b16191c9554653, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
