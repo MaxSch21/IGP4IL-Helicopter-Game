@@ -74,6 +74,7 @@ public class GameManager : MonoBehaviour
     public bool IsFuelDepleted => fuelDepleted;
     public int DeliveredPackages => deliveredPackages;
     public int RequiredPackages => requiredPackages;
+    public int RemainingPackages => Mathf.Max(0, requiredPackages - deliveredPackages);
     public int CurrentHeliCondition => heliCondition;
     public int MaxHeliCondition => maxHeliCondition;
     public float CurrentFuel => currentFuel;

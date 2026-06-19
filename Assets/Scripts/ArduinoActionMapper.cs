@@ -67,7 +67,11 @@ public class ArduinoActionMapper : MonoBehaviour
             helicopterController.SetInputSourceMode(HelicopterController.InputSourceMode.ExternalOnly);
 
         if (gameManager != null)
+        {
             gameManager.OnFuelChanged += HandleFuelChanged;
+            gameManager.OnGameStart += HandleGameStart;
+            gameManager.OnPackageDelivered += HandlePackageDelivered;
+        }
 
         OpenSerialPort();
     }
@@ -75,7 +79,11 @@ public class ArduinoActionMapper : MonoBehaviour
     private void OnDisable()
     {
         if (gameManager != null)
+        {
             gameManager.OnFuelChanged -= HandleFuelChanged;
+            gameManager.OnGameStart -= HandleGameStart;
+            gameManager.OnPackageDelivered -= HandlePackageDelivered;
+        }
 
         if (serialReadyRoutine != null)
         {
@@ -198,6 +206,16 @@ public class ArduinoActionMapper : MonoBehaviour
         SendFuelToServo(current, max);
     }
 
+    private void HandleGameStart(int maxPackages)
+    {
+        SendCurrentPackagesRemaining();
+    }
+
+    private void HandlePackageDelivered(int current, int max)
+    {
+        SendCurrentPackagesRemaining();
+    }
+
     private void SendCurrentFuelToServo()
     {
         if (gameManager == null || Time.unscaledTime < nextServoUpdateTime)
@@ -249,6 +267,24 @@ public class ArduinoActionMapper : MonoBehaviour
 #endif
     }
 
+    private void SendPackagesRemaining(int packagesRemaining)
+    {
+#if ARDUINO_SERIAL_PORTS && (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
+        if (!serialReady || serialConnection == null || !serialConnection.IsOpen)
+            return;
+
+        serialConnection.WriteLine($"P:{Mathf.Clamp(packagesRemaining, 0, 9)}");
+#endif
+    }
+
+    private void SendCurrentPackagesRemaining()
+    {
+        if (gameManager == null)
+            return;
+
+        SendPackagesRemaining(gameManager.RemainingPackages);
+    }
+
     private void OpenSerialPort()
     {
 #if ARDUINO_SERIAL_PORTS && (UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN)
@@ -293,7 +329,10 @@ public class ArduinoActionMapper : MonoBehaviour
         LogSerialStatus("Serial ready.");
 
         if (gameManager != null)
+        {
             SendFuelToServo(gameManager.CurrentFuel, gameManager.MaxFuel, true);
+            SendCurrentPackagesRemaining();
+        }
 
         serialReadyRoutine = null;
     }

@@ -53,7 +53,7 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         HidePanels();
-        SetDeliveryText("0/0");
+        SetDeliveryText("");
         SetTimeTexts(0f);
         ResetWinStars();
         SubscribeToGameManager();
@@ -141,14 +141,13 @@ public class UIManager : MonoBehaviour
         StopWinStarRoutine();
         SetGameplayPaused(false);
         HidePanels();
-        SetDeliveryText($"0/{maxPackages}");
+        SetDeliveryText("");
         SetTimeTexts(0f);
         ResetWinStars();
     }
 
     public void OnPackageDelivered(int current, int max)
     {
-        SetDeliveryText($"{current}/{max}");
     }
 
     public void OnFuelChanged(float current, float max)
