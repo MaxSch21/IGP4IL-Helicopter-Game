@@ -21,11 +21,16 @@ public class UIManager : MonoBehaviour
     [SerializeField] private Button nextLevelButton;
     [SerializeField] private Slider fuelSlider;
     [SerializeField] private GameObject lowFuelWarningObject;
+    [SerializeField] private Graphic lowFuelWarningSprite;
+    [SerializeField] private TMP_Text lowFuelWarningText;
     [SerializeField] private WinStarSlot[] winStarSlots;
     [SerializeField, Min(0f)] private float gameOverPanelDelay = 1f;
     [SerializeField, Min(0f)] private float winStarRevealDelay = 0.25f;
     [SerializeField, Range(0f, 1f)] private float lowFuelWarningThreshold = 0.2f;
-    [SerializeField, Min(0.01f)] private float lowFuelBlinkInterval = 0.35f;
+    [SerializeField, Min(0.01f)] private float lowFuelWarningFadeDuration = 0.7f;
+    [SerializeField, Range(0f, 1f)] private float lowFuelSpriteMinAlpha = 0.35f;
+    [SerializeField, Range(0f, 1f)] private float lowFuelSpriteMaxAlpha = 1f;
+    [SerializeField, Range(0f, 1f)] private float lowFuelTextMaxAlpha = 1f;
 
     private bool subscribedToGameManager;
     private bool subscribedToScoreManager;
@@ -139,6 +144,7 @@ public class UIManager : MonoBehaviour
     {
         StopGameOverRoutine();
         StopWinStarRoutine();
+        StopLowFuelWarning();
         SetGameplayPaused(false);
         HidePanels();
         SetDeliveryText("");
@@ -163,6 +169,7 @@ public class UIManager : MonoBehaviour
 
     public void OnGameOver()
     {
+        StopLowFuelWarning();
         StartGameOverRoutine();
     }
 
@@ -170,6 +177,7 @@ public class UIManager : MonoBehaviour
     {
         StopGameOverRoutine();
         StopWinStarRoutine();
+        StopLowFuelWarning();
         SetGameplayPaused(false);
         if (winPanel != null)
             winPanel.SetActive(true);
@@ -245,8 +253,14 @@ public class UIManager : MonoBehaviour
 
     private void UpdateLowFuelWarning(float currentFuel, float maxFuel)
     {
-        if (lowFuelWarningObject == null || maxFuel <= 0f)
+        if (lowFuelWarningObject == null)
             return;
+
+        if (maxFuel <= 0f)
+        {
+            StopLowFuelWarning();
+            return;
+        }
 
         bool shouldWarn = currentFuel > 0f && currentFuel <= maxFuel * lowFuelWarningThreshold;
 
@@ -277,6 +291,8 @@ public class UIManager : MonoBehaviour
 
         if (lowFuelWarningObject != null)
             lowFuelWarningObject.SetActive(false);
+
+        SetLowFuelWarningAlpha(lowFuelSpriteMaxAlpha, lowFuelTextMaxAlpha);
     }
 
     private IEnumerator ShowGameOverPanelAfterDelay()
@@ -379,11 +395,38 @@ public class UIManager : MonoBehaviour
         while (true)
         {
             lowFuelWarningObject.SetActive(true);
-            yield return new WaitForSeconds(lowFuelBlinkInterval);
 
-            lowFuelWarningObject.SetActive(false);
-            yield return new WaitForSeconds(lowFuelBlinkInterval);
+            float time = 0f;
+            while (time < lowFuelWarningFadeDuration)
+            {
+                float t = time / lowFuelWarningFadeDuration;
+                float spriteT = Mathf.PingPong(t * 2f, 1f);
+                float textT = t < 0.5f ? t * 2f : 1f - (t - 0.5f) * 2f;
+
+                SetLowFuelWarningAlpha(
+                    Mathf.Lerp(lowFuelSpriteMinAlpha, lowFuelSpriteMaxAlpha, spriteT),
+                    Mathf.Lerp(0f, lowFuelTextMaxAlpha, textT));
+
+                time += Time.deltaTime;
+                yield return null;
+            }
         }
+    }
+
+    private void SetLowFuelWarningAlpha(float spriteAlpha, float textAlpha)
+    {
+        SetGraphicAlpha(lowFuelWarningSprite, spriteAlpha);
+        SetGraphicAlpha(lowFuelWarningText, textAlpha);
+    }
+
+    private void SetGraphicAlpha(Graphic graphic, float alpha)
+    {
+        if (graphic == null)
+            return;
+
+        Color color = graphic.color;
+        color.a = alpha;
+        graphic.color = color;
     }
 
     private void ResetWinStars()

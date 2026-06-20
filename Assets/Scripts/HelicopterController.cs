@@ -1,4 +1,6 @@
 using UnityEngine;
+using System;
+using System.Collections;
 
 [RequireComponent(typeof(Rigidbody2D))]
 public class HelicopterController : MonoBehaviour
@@ -39,6 +41,16 @@ public class HelicopterController : MonoBehaviour
     [Header("Crash")]
     [SerializeField, Min(0f)] private float crashGravityScale = 20f;
 
+    [Header("Direction Visuals")]
+    [SerializeField] private GameObject facingRightObject;
+    [SerializeField] private GameObject facingLeftObject;
+    [SerializeField] private GameObject turningObject;
+    [SerializeField] private Collider2D facingRightCollider;
+    [SerializeField] private Collider2D facingLeftCollider;
+    [SerializeField] private Collider2D turningCollider;
+    [SerializeField, Min(0f)] private float turnInputHoldTime = 0.25f;
+    [SerializeField, Min(0f)] private float turnFrameTime = 0.15f;
+
     [Header("Input")]
     [SerializeField] private InputSourceMode inputSourceMode = InputSourceMode.KeyboardOnly;
     [SerializeField] private bool allowKeyboardInputWithExternal = true;
@@ -55,9 +67,15 @@ public class HelicopterController : MonoBehaviour
     private bool inputEnabled = true;
     private float baseGravityScale;
     private bool crashMode;
+    private int facingDirection = 1;
+    private float oppositeInputTime;
+    private bool isTurning;
+    private Coroutine turnRoutine;
 
     public float CurrentVerticalSpeed => currentVerticalSpeed;
     public float CurrentHorizontalInput => currentHorizontalInput;
+    public int CurrentFacingDirection => isTurning ? 0 : facingDirection;
+    public event Action<int> OnDirectionVisualChanged;
 
     void Awake()
     {
@@ -65,6 +83,7 @@ public class HelicopterController : MonoBehaviour
         baseGravityScale = gravityScale;
         rb.gravityScale = gravityScale;
         rb.constraints = RigidbodyConstraints2D.FreezeRotation;
+        SetDirectionVisual(facingDirection);
     }
 
     void Update()
@@ -80,6 +99,7 @@ public class HelicopterController : MonoBehaviour
             UpdateCurrentInput();
         }
 
+        UpdateDirectionVisuals();
         UpdateVisualTilt();
     }
 
@@ -187,6 +207,94 @@ public class HelicopterController : MonoBehaviour
 
         currentHorizontalInput = keyboardHorizontalInput != 0f ? keyboardHorizontalInput : externalHorizontalInput;
         currentVerticalSpeed = Mathf.Clamp(externalVerticalSpeed + keyboardVerticalSpeed, -maxVerticalSpeed, maxVerticalSpeed);
+    }
+
+    private void UpdateDirectionVisuals()
+    {
+        if (isTurning)
+            return;
+
+        int inputDirection = GetHorizontalInputDirection();
+        if (inputDirection == 0 || inputDirection == facingDirection)
+        {
+            oppositeInputTime = 0f;
+            return;
+        }
+
+        oppositeInputTime += Time.deltaTime;
+        if (oppositeInputTime >= turnInputHoldTime)
+            StartTurn(inputDirection);
+    }
+
+    private int GetHorizontalInputDirection()
+    {
+        if (currentHorizontalInput < 0f)
+            return -1;
+
+        if (currentHorizontalInput > 0f)
+            return 1;
+
+        return 0;
+    }
+
+    private void StartTurn(int direction)
+    {
+        if (turnRoutine != null)
+            StopCoroutine(turnRoutine);
+
+        turnRoutine = StartCoroutine(TurnToDirection(direction));
+    }
+
+    private IEnumerator TurnToDirection(int direction)
+    {
+        isTurning = true;
+        oppositeInputTime = 0f;
+        SetTurningVisual();
+
+        if (turnFrameTime > 0f)
+            yield return new WaitForSeconds(turnFrameTime);
+
+        facingDirection = direction;
+        SetDirectionVisual(facingDirection);
+        isTurning = false;
+        turnRoutine = null;
+    }
+
+    private void SetTurningVisual()
+    {
+        SetActiveIfAssigned(facingRightObject, false);
+        SetActiveIfAssigned(facingLeftObject, false);
+        SetActiveIfAssigned(turningObject, true);
+        SetDirectionColliders(0);
+        OnDirectionVisualChanged?.Invoke(0);
+    }
+
+    private void SetDirectionVisual(int direction)
+    {
+        SetActiveIfAssigned(facingRightObject, direction > 0);
+        SetActiveIfAssigned(facingLeftObject, direction < 0);
+        SetActiveIfAssigned(turningObject, false);
+        SetDirectionColliders(direction);
+        OnDirectionVisualChanged?.Invoke(direction);
+    }
+
+    private void SetDirectionColliders(int direction)
+    {
+        SetEnabledIfAssigned(facingRightCollider, direction > 0);
+        SetEnabledIfAssigned(facingLeftCollider, direction < 0);
+        SetEnabledIfAssigned(turningCollider, direction == 0);
+    }
+
+    private void SetActiveIfAssigned(GameObject target, bool active)
+    {
+        if (target != null)
+            target.SetActive(active);
+    }
+
+    private void SetEnabledIfAssigned(Collider2D target, bool enabled)
+    {
+        if (target != null)
+            target.enabled = enabled;
     }
 
     private void ApplyMovement()

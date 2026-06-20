@@ -3,7 +3,14 @@ using UnityEngine;
 public class PlayerDamageSpriteController : MonoBehaviour
 {
     [SerializeField] private GameManager gameManager;
+    [SerializeField] private HelicopterController helicopterController;
     [SerializeField] private SpriteRenderer[] damageStateRenderers;
+    [SerializeField] private SpriteRenderer[] facingRightDamageRenderers;
+    [SerializeField] private SpriteRenderer[] facingLeftDamageRenderers;
+    [SerializeField] private SpriteRenderer[] turningDamageRenderers;
+
+    private int currentDamageTaken;
+    private int currentDirection = 1;
 
     private void OnEnable()
     {
@@ -25,6 +32,9 @@ public class PlayerDamageSpriteController : MonoBehaviour
         if (gameManager == null)
             gameManager = GameManager.Instance != null ? GameManager.Instance : FindFirstObjectByType<GameManager>();
 
+        if (helicopterController == null)
+            helicopterController = FindFirstObjectByType<HelicopterController>();
+
         if (gameManager == null)
             return;
 
@@ -32,6 +42,13 @@ public class PlayerDamageSpriteController : MonoBehaviour
         gameManager.OnGameStart += HandleGameStart;
         gameManager.OnHeliConditionChanged -= HandleHeliConditionChanged;
         gameManager.OnHeliConditionChanged += HandleHeliConditionChanged;
+
+        if (helicopterController != null)
+        {
+            helicopterController.OnDirectionVisualChanged -= HandleDirectionVisualChanged;
+            helicopterController.OnDirectionVisualChanged += HandleDirectionVisualChanged;
+            currentDirection = helicopterController.CurrentFacingDirection;
+        }
 
         HandleHeliConditionChanged(gameManager.CurrentHeliCondition, gameManager.MaxHeliCondition);
     }
@@ -43,6 +60,9 @@ public class PlayerDamageSpriteController : MonoBehaviour
 
         gameManager.OnGameStart -= HandleGameStart;
         gameManager.OnHeliConditionChanged -= HandleHeliConditionChanged;
+
+        if (helicopterController != null)
+            helicopterController.OnDirectionVisualChanged -= HandleDirectionVisualChanged;
     }
 
     private void HandleGameStart(int _)
@@ -56,15 +76,48 @@ public class PlayerDamageSpriteController : MonoBehaviour
         SetDamageStage(damageTaken);
     }
 
+    private void HandleDirectionVisualChanged(int direction)
+    {
+        currentDirection = direction;
+        SetDamageStage(currentDamageTaken);
+    }
+
     private void SetDamageStage(int damageTaken)
     {
-        if (damageStateRenderers == null)
+        currentDamageTaken = damageTaken;
+
+        if (HasDirectionalDamageRenderers())
+        {
+            SetDamageStage(facingRightDamageRenderers, currentDirection > 0 ? damageTaken : 0);
+            SetDamageStage(facingLeftDamageRenderers, currentDirection < 0 ? damageTaken : 0);
+            SetDamageStage(turningDamageRenderers, currentDirection == 0 ? damageTaken : 0);
+            return;
+        }
+
+        SetDamageStage(damageStateRenderers, damageTaken);
+    }
+
+    private bool HasDirectionalDamageRenderers()
+    {
+        return HasAnyRenderer(facingRightDamageRenderers) ||
+               HasAnyRenderer(facingLeftDamageRenderers) ||
+               HasAnyRenderer(turningDamageRenderers);
+    }
+
+    private bool HasAnyRenderer(SpriteRenderer[] renderers)
+    {
+        return renderers != null && renderers.Length > 0;
+    }
+
+    private void SetDamageStage(SpriteRenderer[] renderers, int damageTaken)
+    {
+        if (renderers == null)
             return;
 
         int activeIndex = damageTaken - 1;
-        for (int i = 0; i < damageStateRenderers.Length; i++)
+        for (int i = 0; i < renderers.Length; i++)
         {
-            SpriteRenderer damageRenderer = damageStateRenderers[i];
+            SpriteRenderer damageRenderer = renderers[i];
             if (damageRenderer == null)
                 continue;
 

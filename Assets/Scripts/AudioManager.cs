@@ -46,6 +46,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float lowFuelThreshold = 0.2f;
 
     private GameManager gameManager;
+    private int lastHeliCondition = -1;
     private float nextPitchUpdateTime;
 
     private void Awake()
@@ -104,11 +105,13 @@ public class AudioManager : MonoBehaviour
         gameManager.OnPackagePickedUp += OnPackagePickedUp;
         gameManager.OnPackageDelivered += OnPackageDelivered;
         gameManager.OnFuelChanged += OnFuelChanged;
+        gameManager.OnHeliConditionChanged += OnHeliConditionChanged;
         gameManager.OnGameOver += OnGameOver;
         gameManager.OnWin += OnWin;
         gameManager.OnStateChanged += OnStateChanged;
         gameManager.OnHeliDestroyed += OnHeliDestroyed;
 
+        lastHeliCondition = gameManager.CurrentHeliCondition;
         SyncAudioToState();
     }
 
@@ -121,15 +124,20 @@ public class AudioManager : MonoBehaviour
         gameManager.OnPackagePickedUp -= OnPackagePickedUp;
         gameManager.OnPackageDelivered -= OnPackageDelivered;
         gameManager.OnFuelChanged -= OnFuelChanged;
+        gameManager.OnHeliConditionChanged -= OnHeliConditionChanged;
         gameManager.OnGameOver -= OnGameOver;
         gameManager.OnWin -= OnWin;
         gameManager.OnStateChanged -= OnStateChanged;
         gameManager.OnHeliDestroyed -= OnHeliDestroyed;
         gameManager = null;
+        lastHeliCondition = -1;
     }
 
     private void OnGameStart(int maxPackages)
     {
+        if (gameManager != null)
+            lastHeliCondition = gameManager.CurrentHeliCondition;
+
         StopLoop(lowFuelSource);
         StopLoop(fallSource);
         PlayLoop(helicopterSource);
@@ -152,6 +160,14 @@ public class AudioManager : MonoBehaviour
     private void OnPackageDelivered(int current, int max)
     {
         PlayOneShot(crateDeliveredClip);
+    }
+
+    private void OnHeliConditionChanged(int current, int max)
+    {
+        if (lastHeliCondition >= 0 && current < lastHeliCondition)
+            PlayRandomOneShot(heliCrashClips);
+
+        lastHeliCondition = current;
     }
 
     private void OnFuelChanged(float current, float max)
@@ -204,7 +220,9 @@ public class AudioManager : MonoBehaviour
 
     private void OnHeliDestroyed()
     {
-        PlayRandomOneShot(heliCrashClips);
+        if (lastHeliCondition > 0)
+            PlayRandomOneShot(heliCrashClips);
+
         PlayOneShot(explosionClip);
     }
 
