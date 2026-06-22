@@ -28,7 +28,7 @@ public class ArduinoActionMapper : MonoBehaviour
     [SerializeField] private float joystickMappedRange = 100f;
     [SerializeField] private float potentiometerRange = 100f;
     [SerializeField] private bool invertJoystick;
-    [SerializeField] private bool invertPotentiometer;
+    [SerializeField] private bool invertPotentiometer = true;
 
     [Header("Servo Output")]
     [SerializeField] private float fullFuelAngle = 0f;

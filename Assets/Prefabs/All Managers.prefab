@@ -289,7 +289,7 @@ MonoBehaviour:
   joystickMappedRange: 100
   potentiometerRange: 100
   invertJoystick: 0
-  invertPotentiometer: 0
+  invertPotentiometer: 1
   fullFuelAngle: 0
   emptyFuelAngle: 180
   servoUpdateInterval: 1
